@@ -4,6 +4,7 @@ const envVarNotSet = name => {
 
 module.exports = {
   APP: {
-    ENV: process.env.NODE_ENV || envVarNotSet("NODE_ENV")
+    ENV: process.env.NODE_ENV || envVarNotSet("NODE_ENV"),
+    PORT: process.env.PORT || 3000
   }
 };
