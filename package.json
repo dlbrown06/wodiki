@@ -1,0 +1,25 @@
+{
+  "name": "wodiki",
+  "version": "1.0.0",
+  "description": "Crossfit ",
+  "main": "app.js",
+  "author": "Doug Brown",
+  "license": "ISC",
+  "homepage": "https://wodiki.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dlbrown06/wodiki.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dlbrown06/wodiki/issues"
+  },
+  "dependencies": {
+    "dotenv": "^6.0.0",
+    "fastify": "^1.9.0",
+    "fastify-react": "^2.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node $NODE_DEBUG_OPTION server.js"
+  }
+}
