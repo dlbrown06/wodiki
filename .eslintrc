@@ -1,0 +1,28 @@
+{
+  "parser": "babel-eslint",
+
+  "extends": "prettier",
+
+  "plugins": [
+    "prettier",
+    "react"
+  ],
+
+  "env": {
+    "es6": true,
+    "node": true
+  },
+
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    }
+  },
+
+  "rules": {
+    "prettier/prettier": "error"
+  }
+}

@@ -1,9 +1,9 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const CONSTANTS = require("./config/constants");
+const CONSTANTS = require("../config/constants");
 
 // Require the framework and instantiate it
-const fastify = require('fastify')({
+const fastify = require("fastify")({
   logger: {
     prettyPrint: CONSTANTS.APP.ENV !== "production"
   }
@@ -12,31 +12,31 @@ const fastify = require('fastify')({
 /**
  * Begin Registering Fastify Plugins
  */
-fastify
-  .register(require('fastify-react'))
-  .after(() => {
-    fastify.next('/hello')
-  });
+fastify.register(require("fastify-react")).after(() => {
+  fastify.next("/hello");
+});
 
-fastify.register(require('fastify-favicon'));
+fastify.register(require("fastify-favicon"), {
+  path: "../client/public"
+});
 
 /**
  * Finished Registering Fastify Plugins
  */
 
 // Declare a route
-fastify.get('/', async (request, reply) => {
-  return { hello: 'world' }
-})
+fastify.get("/", async (request, reply) => {
+  return { hello: "world" };
+});
 
 // Run the server!
 const start = async () => {
   try {
-    await fastify.listen(3000)
+    await fastify.listen(3000);
   } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
+    fastify.log.error(err);
+    process.exit(1);
   }
-}
+};
 
 start();
