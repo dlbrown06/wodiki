@@ -14,7 +14,10 @@ class App extends Component {
       <div className="App">
         <div className="center-it">
           <div>
-            <img src="/images/brand/wodiki-crossfit.png" alt="WODiki Home" />
+            <img
+              src="/images/brand/wodiki-crossfit-250.png"
+              alt="WODiki Home"
+            />
           </div>
           <div className="title">WODiki</div>
           <div className="description">
