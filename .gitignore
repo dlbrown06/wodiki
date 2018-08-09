@@ -7,9 +7,10 @@
 /coverage
 
 # production
-/build
+/client/build
 
 # misc
+*.css
 .DS_Store
 .idea
 .next

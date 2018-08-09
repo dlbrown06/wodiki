@@ -1,10 +1,11 @@
 const envVarNotSet = name => {
-  console.log(`Environment Variable '${name}' Not Set`);
+  console.warn(`Environment Variable '${name}' Not Set`);
 };
 
 module.exports = {
   APP: {
-    ENV: process.env.NODE_ENV || envVarNotSet("NODE_ENV"),
-    PORT: process.env.PORT || 3000
+    ENV: process.env.NODE_ENV || "production",
+    PORT: process.env.PORT || 3000,
+    DB: process.env.DATABASE_URL || envVarNotSet("DATABASE_URL")
   }
 };

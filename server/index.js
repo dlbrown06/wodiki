@@ -14,32 +14,29 @@ const fastify = require("fastify")({
 /**
  * Begin Registering Fastify Plugins
  */
-/*fastify
-  .register(require("fastify-react"), {
-    dev: CONSTANTS.APP.ENV !== "production"
-  })
-  .after(() => {
-    fastify.next("/");
-  });*/
 
-fastify.register(require("fastify-favicon"), {
-  path: "../client/public"
+fastify.register(require("fastify-static"), {
+  root: path.join(
+    __dirname,
+    "..",
+    "client",
+    CONSTANTS.APP.ENV === "production" ? "build" : "public"
+  ),
+  prefix: "/"
+});
+
+fastify.register(require("fastify-postgres"), {
+  connectionString: CONSTANTS.APP.DB
 });
 
 /**
  * Finished Registering Fastify Plugins
  */
 
-/*fastify.next('/', (app, req, reply) => {
-  // your code
-  // `app` is the Next instance
-  app.render(req.raw, reply.res, '/', req.query, {});
-});*/
-
-// Declare a route
-fastify.get("/", async (request, reply) => {
-  reply.sendFile(path.join(__dirname, "..", "..", "build", "index.html"));
-});
+/**
+ * Include All Routes
+ */
+require("./routes")(fastify);
 
 // Run the server!
 const start = async () => {

@@ -1,0 +1,40 @@
+.App {
+  text-align: center;
+  height: 100%;
+  background: #fbfbfb;
+
+  .center-it {
+    position: relative;
+    top: 40%;
+    transform: translateY(-50%);
+
+    img {
+      height: 250px;
+      opacity: 0.5;
+    }
+
+    .title {
+      font-size: 75px;
+      color: #a5a5a5;
+      margin-bottom: 20px;
+    }
+
+    .description {
+      margin-bottom: 20px;
+      color: #717171;
+      font-size: 25px;
+    }
+
+    .social {
+      color: #a5a5a5;
+      font-size: small;
+
+      .ask {
+        a {
+          color: #6a6aff;
+          text-decoration: none;
+        }
+      }
+    }
+  }
+}
