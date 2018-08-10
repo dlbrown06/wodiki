@@ -11,6 +11,8 @@ const fastify = require("fastify")({
   }
 });
 
+fastify.use(require('heroku-ssl-redirect')());
+
 /**
  * Begin Registering Fastify Plugins
  */
@@ -20,7 +22,7 @@ fastify.register(require("fastify-static"), {
     __dirname,
     "..",
     "client",
-    CONSTANTS.APP.ENV === "production" ? "build" : "public"
+    CONSTANTS.APP.ENV !== "local" ? "build" : "public"
   ),
   prefix: "/"
 });
