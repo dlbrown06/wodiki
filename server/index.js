@@ -11,6 +11,8 @@ const fastify = require("fastify")({
   }
 });
 
+fastify.use(require('heroku-ssl-redirect')());
+
 /**
  * Begin Registering Fastify Plugins
  */
