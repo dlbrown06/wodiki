@@ -20,7 +20,7 @@ fastify.register(require("fastify-static"), {
     __dirname,
     "..",
     "client",
-    CONSTANTS.APP.ENV === "production" ? "build" : "public"
+    CONSTANTS.APP.ENV !== "local" ? "build" : "public"
   ),
   prefix: "/"
 });
