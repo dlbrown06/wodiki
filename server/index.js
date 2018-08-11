@@ -31,6 +31,10 @@ fastify.register(require("fastify-postgres"), {
   connectionString: CONSTANTS.APP.DB
 });
 
+fastify.register(require("fastify-jwt"), {
+  secret: CONSTANTS.APP.SECRET
+});
+
 /**
  * Finished Registering Fastify Plugins
  */

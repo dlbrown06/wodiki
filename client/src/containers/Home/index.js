@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import request from "superagent";
-import { Row, Card } from "reactstrap";
+import { Row } from "reactstrap";
 
 import Login from "../Login";
 
@@ -11,11 +10,6 @@ class Home extends Component {
     super();
 
     this.state = {};
-  }
-
-  async componentWillMount() {
-    const rsp = await request.get("/api/__health");
-    console.log(rsp.text);
   }
 
   render() {

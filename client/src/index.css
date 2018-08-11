@@ -9,3 +9,11 @@ body {
 
 #container {
   height: 100%; }
+
+.link {
+  color: #6a6aff;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all .3s; }
+  .link:hover {
+    color: blue; }

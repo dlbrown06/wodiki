@@ -18,7 +18,16 @@ module.exports = {
       process.env.DATABASE_URL ||
       envVarNotSet(
         "DATABASE_URL",
-        "postgres://postgres@localhost:5432/postgres"
-      )
+        "postgres://postgres:password@localhost:5432/postgres"
+      ),
+    SECRET: process.env.SECRET || envVarNotSet("SECRET", "notastrongsecret")
+  },
+
+  SYS_ACCT: {
+    EMAIL:
+      process.env.SYS_EMAIL || envVarNotSet("SYS_EMAIL", "email@example.com"),
+    PASSWORD:
+      process.env.SYS_PASSWORD ||
+      envVarNotSet("SYS_PASSWORD", "thisisnotapassword")
   }
 };

@@ -1,7 +1,10 @@
 import React, { Component } from "react";
-import request from "superagent";
 import { Card } from "reactstrap";
+import request from "superagent";
+import httpStatus from "http-status-codes";
 
+import auth from "../../auth";
+import history from "../../history";
 import LoginForm from "../../components/_Forms/Login";
 
 import "./style.css";
@@ -16,17 +19,26 @@ class Login extends Component {
     };
   }
 
-  async componentWillMount() {
-    const rsp = await request.get("/api/__health");
-    console.log(rsp.text);
-  }
-
   onSubmit = async (email, password) => {
     this.setState({ disableForm: true, loginError: null });
-    setTimeout(() => {
-      this.setState({ loginError: "Invalid Email / Password Combination" });
-      this.setState({ disableForm: false });
-    }, 500);
+
+    try {
+      const rsp = await request
+        .post("/api/users/login")
+        .send({ email, password });
+
+      if (rsp.status === httpStatus.OK) {
+        auth.login(email, rsp.body.token);
+        return history.push("/member");
+      } else {
+        this.setState({ loginError: rsp.body.message });
+      }
+    } catch (err) {
+      console.log(err);
+      this.setState({ loginError: "Invalid Email / Password" });
+    }
+
+    this.setState({ disableForm: false });
   };
 
   render() {
