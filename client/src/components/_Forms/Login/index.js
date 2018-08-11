@@ -23,7 +23,7 @@ class FormLogin extends Component {
   };
 
   render() {
-    const { error, onSubmit } = this.props;
+    const { error, onSubmit, disable } = this.props;
     const { email, password } = this.state;
 
     return (
@@ -40,6 +40,7 @@ class FormLogin extends Component {
               placeholder="Email"
               value={email}
               onChange={this.onEmailChange}
+              disabled={disable}
             />
           </Col>
         </FormGroup>
@@ -55,11 +56,16 @@ class FormLogin extends Component {
               placeholder="Password"
               value={password}
               onChange={this.onPasswordChange}
+              disabled={disable}
             />
           </Col>
         </FormGroup>
         {error && <Alert color="danger">{error}</Alert>}
-        <Button block onClick={() => onSubmit(email, password)}>
+        <Button
+          block
+          disabled={disable}
+          onClick={() => onSubmit(email, password)}
+        >
           Login
         </Button>
       </Form>
@@ -69,11 +75,13 @@ class FormLogin extends Component {
 
 FormLogin.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  error: PropTypes.string
+  error: PropTypes.string,
+  disable: PropTypes.bool
 };
 
 FormLogin.defaultProps = {
-  error: undefined
+  error: undefined,
+  disable: false
 };
 
 export default FormLogin;

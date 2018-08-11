@@ -11,7 +11,8 @@ class Login extends Component {
     super();
 
     this.state = {
-      loginError: undefined
+      loginError: undefined,
+      disableForm: false
     };
   }
 
@@ -21,15 +22,23 @@ class Login extends Component {
   }
 
   onSubmit = async (email, password) => {
-    this.setState({ loginError: "Invalid Email / Password Combination" });
+    this.setState({ disableForm: true, loginError: null });
+    setTimeout(() => {
+      this.setState({ loginError: "Invalid Email / Password Combination" });
+      this.setState({ disableForm: false });
+    }, 500);
   };
 
   render() {
-    const { loginError } = this.state;
+    const { loginError, disableForm } = this.state;
 
     return (
       <Card body>
-        <LoginForm onSubmit={this.onSubmit} error={loginError} />
+        <LoginForm
+          onSubmit={this.onSubmit}
+          error={loginError}
+          disable={disableForm}
+        />
       </Card>
     );
   }
