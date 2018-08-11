@@ -1,12 +1,8 @@
-.App {
-  text-align: center;
+.Home {
   height: 100%;
-  background: #fbfbfb;
 
   .center-it {
-    position: relative;
-    top: 40%;
-    transform: translateY(-50%);
+    margin: 8% auto auto;
 
     img {
       opacity: 0.5;
@@ -15,11 +11,10 @@
     .title {
       font-size: 75px;
       color: #a5a5a5;
-      margin-bottom: 20px;
     }
 
     .description {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       color: #717171;
       font-size: 25px;
     }
@@ -27,6 +22,7 @@
     .social {
       color: #a5a5a5;
       font-size: small;
+      margin-bottom: 10px;
 
       .ask {
         a {
