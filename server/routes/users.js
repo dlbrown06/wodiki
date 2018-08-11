@@ -6,7 +6,7 @@ const { SYS_ACCT } = CONSTANTS;
 module.exports = function(fastify, opts, next) {
   fastify.route({
     method: "POST",
-    url: "/users/login",
+    url: "/athletes/login",
     schema: {
       body: {
         type: "object",

@@ -29,7 +29,7 @@ class Login extends Component {
 
       if (rsp.status === httpStatus.OK) {
         auth.login(email, rsp.body.token);
-        return history.push("/member");
+        return history.push("/athletes");
       } else {
         this.setState({ loginError: rsp.body.message });
       }

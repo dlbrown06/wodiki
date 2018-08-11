@@ -10,7 +10,6 @@ const fastify = require("fastify")({
     prettyPrint: CONSTANTS.APP.ENV !== "production"
   }
 });
-
 /**
  * Begin Registering Fastify Plugins
  */
