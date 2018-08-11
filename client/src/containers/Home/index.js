@@ -1,9 +1,18 @@
 import React, { Component } from "react";
 import request from "superagent";
+import { Row, Card } from "reactstrap";
 
-import "./App.css";
+import Login from "../Login";
 
-class App extends Component {
+import "./style.css";
+
+class Home extends Component {
+  constructor() {
+    super();
+
+    this.state = {};
+  }
+
   async componentWillMount() {
     const rsp = await request.get("/api/__health");
     console.log(rsp.text);
@@ -11,7 +20,7 @@ class App extends Component {
 
   render() {
     return (
-      <div className="App">
+      <Row className="Home" noGutters>
         <div className="center-it">
           <div>
             <img
@@ -24,17 +33,19 @@ class App extends Component {
             Built for Crossfit Athletes and Affiliates Alike
           </div>
           <div className="social">
-            <div>Want to know what's coming?</div>
+            <div>Want to know what's coming or request an invite?</div>
             <div className="ask">
               <a href="https://twitter.com/wodiki1" target="_blank">
                 Ask us on Twitter
               </a>
             </div>
           </div>
+
+          <Login />
         </div>
-      </div>
+      </Row>
     );
   }
 }
 
-export default App;
+export default Home;
