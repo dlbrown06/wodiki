@@ -1,4 +1,4 @@
-const app = "wodiki";
+const app = "wodiki-user";
 
 const Auth = {
   isLoggedIn() {
@@ -48,9 +48,11 @@ const Auth = {
     }
   },
 
-  login: (email, token) => {
+  login: (id, email, is_admin, token) => {
     localStorage[app] = JSON.stringify({
+      id,
       email,
+      is_admin,
       token
     });
   },
@@ -60,40 +62,27 @@ const Auth = {
   },
 
   getToken() {
-    const app = localStorage.getItem(app);
-    if (app === null) {
+    const user = localStorage.getItem(app);
+    if (user === null) {
       return {};
     }
-    return JSON.parse(app).token;
+    return JSON.parse(user).token;
   },
 
-  getUsername() {
-    const app = localStorage.getItem(app);
-    if (app === null) {
+  getEmail() {
+    const user = localStorage.getItem(app);
+    if (user === null) {
       return {};
     }
-
-    return JSON.parse(app).user.username;
+    return JSON.parse(user).email;
   },
 
-  getUserFullName() {
-    const app = localStorage.getItem(app);
-    if (app === null) {
+  getId() {
+    const user = localStorage.getItem(app);
+    if (user === null) {
       return {};
     }
-
-    const user = JSON.parse(app).user;
-
-    return `${user.first_name} ${user.last_name}`;
-  },
-
-  getUser() {
-    const app = localStorage.getItem(app);
-    if (app === null) {
-      return {};
-    }
-
-    return JSON.parse(app).user;
+    return JSON.parse(user).id;
   },
 
   tokenHeader() {

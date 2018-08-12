@@ -24,12 +24,17 @@ class Login extends Component {
 
     try {
       const rsp = await request
-        .post("/api/users/login")
+        .post("/api/athletes/login")
         .send({ email, password });
 
       if (rsp.status === httpStatus.OK) {
-        auth.login(email, rsp.body.token);
-        return history.push("/member");
+        auth.login(
+          rsp.body.id,
+          rsp.body.email,
+          rsp.body.is_admin,
+          rsp.body.token
+        );
+        return history.push("/athletes");
       } else {
         this.setState({ loginError: rsp.body.message });
       }

@@ -57,6 +57,7 @@ class FormLogin extends Component {
               value={password}
               onChange={this.onPasswordChange}
               disabled={disable}
+              onKeyPress={e => e.key === "Enter" && onSubmit(email, password)}
             />
           </Col>
         </FormGroup>

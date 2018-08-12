@@ -10,9 +10,6 @@ const fastify = require("fastify")({
     prettyPrint: CONSTANTS.APP.ENV !== "production"
   }
 });
-
-fastify.use(require("heroku-ssl-redirect")());
-
 /**
  * Begin Registering Fastify Plugins
  */
