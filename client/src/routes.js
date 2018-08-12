@@ -6,7 +6,7 @@ import auth from "./auth";
 
 import App from "./containers/App";
 import Home from "./containers/Home";
-import Member from "./containers/Member";
+import Athletes from "./containers/Athletes";
 
 import NotFound from "./components/NotFound";
 
@@ -15,7 +15,7 @@ const Routes = props => (
     <App>
       <Switch>
         <Route exact path="/" component={Home} onEnter={auth.passIfLoggedIn} />
-        <Route exact path="/member" component={Member} />
+        <Route exact path="/athletes" component={Athletes} />
         <Route path="*" component={NotFound} />
       </Switch>
     </App>
