@@ -127,5 +127,61 @@ module.exports = function(fastify, opts, next) {
     }
   });
 
+  fastify.route({
+    method: "GET",
+    url: "/wods/:athlete_id",
+    schema: {
+      params: {
+        athlete_id: { type: "string" }
+      }
+    },
+    beforeHandler: (request, reply, done) =>
+      auth.requireAthlete(fastify, request, reply, done),
+    handler: async (request, reply) => {
+      const { athlete_id } = request.params;
+
+      try {
+        const db = await fastify.pg.connect();
+        const { rows } = await db.query(
+          `
+          SELECT
+            wods.id,
+            wods.name,
+            wods.type,
+            wods.for_rounds,
+            wods.time_cap,
+            wods.created_by,
+            wods.created_on,
+            ws.reps total_reps,
+            ws.rounds total_rounds,
+            ws.total_time total_time,
+            count(*)
+            over () as total_records
+          FROM wods
+            INNER JOIN wod_scores ws ON ws.wod_id = wods.id
+          WHERE created_by = $1
+          ORDER BY created_on DESC
+          LIMIT 50
+        `,
+          [athlete_id]
+        );
+
+        return reply.send({
+          count: rows.length ? rows[0].total_records : 0,
+          results: rows.map(row => {
+            delete row.total_records;
+            return row;
+          })
+        });
+      } catch (err) {
+        fastify.log.error(err);
+        return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+          message: "Failed to Fetch WODs",
+          error: err.toString()
+        });
+      }
+    }
+  });
+
   next();
 };

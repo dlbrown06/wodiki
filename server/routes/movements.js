@@ -71,7 +71,7 @@ module.exports = function(fastify, opts, next) {
 
         db.release();
 
-        return reply.status(httpStatus.CREATED).send({
+        return reply.send({
           count: _.first(rows).total_count,
           results: rows.map(row => {
             delete row.total_count;

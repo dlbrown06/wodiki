@@ -40,19 +40,19 @@ module.exports = function(fastify, opts, next) {
         }
 
         const user = _.first(rows);
-
-        // put more detail in the payload
-        const token = fastify.jwt.sign({
+        const payload = {
           id: user.id,
           email: user.email,
           is_admin: user.is_admin
-        });
+        };
+
+        // put more detail in the payload
+        const token = fastify.jwt.sign(payload);
         fastify.log.info(`Token Generated for email '${email}': ${token}`);
-        reply.send({
-          message: "User Authenticated",
-          is_admin: user.is_admin,
-          token
-        });
+
+        payload.token = token;
+        payload.message = "User Authenticated";
+        reply.send(payload);
       } else {
         reply.status(httpStatus.UNAUTHORIZED).send({
           message: "Invalid Athlete Login"

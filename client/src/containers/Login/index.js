@@ -28,7 +28,12 @@ class Login extends Component {
         .send({ email, password });
 
       if (rsp.status === httpStatus.OK) {
-        auth.login(email, rsp.body.is_admin, rsp.body.token);
+        auth.login(
+          rsp.body.id,
+          rsp.body.email,
+          rsp.body.is_admin,
+          rsp.body.token
+        );
         return history.push("/athletes");
       } else {
         this.setState({ loginError: rsp.body.message });

@@ -48,8 +48,9 @@ const Auth = {
     }
   },
 
-  login: (email, is_admin, token) => {
+  login: (id, email, is_admin, token) => {
     localStorage[app] = JSON.stringify({
+      id,
       email,
       is_admin,
       token
@@ -66,6 +67,22 @@ const Auth = {
       return {};
     }
     return JSON.parse(user).token;
+  },
+
+  getEmail() {
+    const user = localStorage.getItem(app);
+    if (user === null) {
+      return {};
+    }
+    return JSON.parse(user).email;
+  },
+
+  getId() {
+    const user = localStorage.getItem(app);
+    if (user === null) {
+      return {};
+    }
+    return JSON.parse(user).id;
   },
 
   tokenHeader() {

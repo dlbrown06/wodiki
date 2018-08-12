@@ -4,6 +4,7 @@ import request from "superagent";
 
 import FormAddMovement from "../../components/_Forms/AddMovement";
 import FormAddWOD from "../../components/_Forms/AddWOD";
+import WODLogs from "../../components/WODLogs";
 import auth from "../../auth";
 import history from "../../history";
 
@@ -14,6 +15,9 @@ class Athletes extends Component {
     super();
 
     this.state = {
+      wods: [],
+      fetchingWODs: false,
+
       movements: [],
       fetchingMovements: false,
 
@@ -26,7 +30,7 @@ class Athletes extends Component {
   }
 
   componentWillMount() {
-    return this.onFetchMovements();
+    return Promise.all[(this.onFetchMovements(), this.onFetchWODs())];
   }
 
   onAddMovement = async (name, type) => {
@@ -98,8 +102,25 @@ class Athletes extends Component {
     }
   };
 
+  onFetchWODs = async () => {
+    try {
+      this.setState({ fetchingWODs: true });
+      const rsp = await request
+        .get(`/api/wods/${auth.getId()}`)
+        .set(...auth.tokenHeader());
+      this.setState({ fetchingWODs: false, wods: rsp.body.results });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        fetchingWODs: false
+      });
+      return false;
+    }
+  };
+
   render() {
-    const { addingMovement, addingMovementError, movements } = this.state;
+    const { addingMovement, addingMovementError, movements, wods } = this.state;
     return (
       <Container className="Athletes">
         <Row className="m-t-md">
@@ -150,6 +171,12 @@ class Athletes extends Component {
                 />
               </CardBody>
             </Card>
+          </Col>
+        </Row>
+
+        <Row>
+          <Col xs={12}>
+            <WODLogs wods={wods} />
           </Col>
         </Row>
       </Container>
