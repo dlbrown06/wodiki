@@ -31,7 +31,7 @@ class FormAddWOD extends Component {
       type: "",
       timeCap: "",
       forRounds: "",
-      movements: [this.defaultMovement],
+      movements: [_.cloneDeep(this.defaultMovement)],
       score: {
         time: "",
         rounds: "",
@@ -39,7 +39,7 @@ class FormAddWOD extends Component {
       }
     };
 
-    this.state = _.clone(this.defaultState);
+    this.state = _.cloneDeep(this.defaultState);
   }
 
   onInputChange = (name, value) => {
@@ -74,7 +74,8 @@ class FormAddWOD extends Component {
 
     const result = await onSubmit(state);
     if (result) {
-      this.setState(this.defaultState);
+      const state = _.cloneDeep(this.defaultState);
+      this.setState(state);
     }
   };
 
@@ -248,6 +249,7 @@ class FormAddWOD extends Component {
                       type="number"
                       name="reps"
                       placeholder="Reps"
+                      value={movement.reps}
                       onChange={e => {
                         movement.reps = e.target.value;
                         this.setState({ movements });
@@ -265,6 +267,7 @@ class FormAddWOD extends Component {
                       type="number"
                       name="weight"
                       placeholder="Weight"
+                      value={movement.weight}
                       onChange={e => {
                         movement.weight = e.target.value;
                         this.setState({ movements });

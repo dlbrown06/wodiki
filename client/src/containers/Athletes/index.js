@@ -52,8 +52,6 @@ class Athletes extends Component {
   };
 
   onAddWOD = async wod => {
-    console.log(wod);
-
     if (wod.score.time.length > 0) {
       const timeSepIdx = wod.score.time.indexOf(":");
       const min = parseInt(wod.score.time.substr(0, timeSepIdx), 10);
@@ -61,7 +59,9 @@ class Athletes extends Component {
       wod.score.time_sec = min * 60 + sec;
     }
 
-    console.log(wod);
+    if (wod.timeCap.length > 0) {
+      wod.timeCapSec = parseInt(wod.timeCap, 10) * 60;
+    }
 
     try {
       this.setState({ addingWODError: "", addingWOD: true });

@@ -16,6 +16,8 @@ module.exports = function(fastify, opts, next) {
           name: { type: "string" },
           type: { type: "string" },
           forRounds: { type: ["number", "string"] },
+          timeCap: { type: ["number", "string"] },
+          timeCapSec: { type: ["number"] },
           movements: {
             type: "array",
             items: [
@@ -48,7 +50,15 @@ module.exports = function(fastify, opts, next) {
     beforeHandler: (request, reply, done) =>
       auth.requireAthlete(fastify, request, reply, done),
     handler: async (request, reply) => {
-      const { name, type, forRounds, movements, score, timeCap } = request.body;
+      const {
+        name,
+        type,
+        forRounds,
+        movements,
+        score,
+        timeCap,
+        timeCapSec
+      } = request.body;
 
       try {
         const db = await fastify.pg.connect();
@@ -64,7 +74,7 @@ module.exports = function(fastify, opts, next) {
               name,
               type,
               forRounds === "" ? null : forRounds,
-              timeCap === "" ? null : timeCap,
+              timeCap === "" ? null : timeCapSec,
               request.user.id
             ]
           );
