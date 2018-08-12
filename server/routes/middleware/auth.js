@@ -1,8 +1,8 @@
 const httpStatus = require("http-status-codes");
 
-const requireSysAdmin = async () => { };
+const requireSysAdmin = async () => {};
 
-const requireAdmin = async () => { };
+const requireAdmin = async () => {};
 
 const requireAthlete = (fastify, request, reply, done) => {
   // check user is logged in

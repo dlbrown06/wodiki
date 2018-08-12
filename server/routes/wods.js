@@ -8,7 +8,7 @@ const auth = require("./middleware/auth");
 module.exports = function(fastify, opts, next) {
   fastify.route({
     method: "POST",
-    url: "/movements",
+    url: "/wods",
     schema: {
       body: {
         type: "object",
@@ -55,7 +55,7 @@ module.exports = function(fastify, opts, next) {
     }
   });
 
-  fastify.route({
+  /*fastify.route({
     method: "GET",
     url: "/movements",
     beforeHandler: (request, reply, done) =>
@@ -86,7 +86,7 @@ module.exports = function(fastify, opts, next) {
         });
       }
     }
-  });
+  });*/
 
   next();
 };

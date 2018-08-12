@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { Row, Col, Card, CardBody, CardTitle } from "reactstrap";
+import { Container, Row, Col, Card, CardBody, CardTitle } from "reactstrap";
 import request from "superagent";
 
 import FormAddMovement from "../../components/_Forms/AddMovement";
+import FormAddWOD from "../../components/_Forms/AddWOD";
 import auth from "../../auth";
 import history from "../../history";
 
@@ -13,9 +14,19 @@ class Athletes extends Component {
     super();
 
     this.state = {
+      movements: [],
+      fetchingMovements: false,
+
+      addingWOD: false,
+      addingWODError: "",
+
       addingMovement: false,
       addingMovementError: ""
     };
+  }
+
+  componentWillMount() {
+    return this.onFetchMovements();
   }
 
   onAddMovement = async (name, type) => {
@@ -28,6 +39,8 @@ class Athletes extends Component {
           name,
           type
         });
+      this.setState({ addingMovement: false });
+      return true;
     } catch (err) {
       console.error(err);
       this.setState({
@@ -36,17 +49,52 @@ class Athletes extends Component {
       });
       return false;
     }
+  };
 
-    this.setState({ addingMovement: false });
-    return true;
+  onAddWOD = async wod => {
+    console.log(wod);
+    try {
+      this.setState({ addingWODError: "", addingWOD: true });
+      const rsp = await request
+        .post("/api/wods")
+        .set(...auth.tokenHeader())
+        .send(wod);
+      console.log(wod);
+      this.setState({ addingWOD: false });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        addingWODError: `Failed to include new WOD`,
+        addingWOD: false
+      });
+      return false;
+    }
+  };
+
+  onFetchMovements = async () => {
+    try {
+      this.setState({ fetchingMovements: true });
+      const rsp = await request
+        .get("/api/movements")
+        .set(...auth.tokenHeader());
+      this.setState({ fetchingMovements: false, movements: rsp.body.results });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        fetchingMovements: false
+      });
+      return false;
+    }
   };
 
   render() {
-    const { addingMovement, addingMovementError } = this.state;
+    const { addingMovement, addingMovementError, movements } = this.state;
     return (
-      <Row className="Athletes" noGutters>
-        <Row>
-          <Col>
+      <Container className="Athletes">
+        <Row className="m-t-md">
+          <Col xs={12}>
             <div className="text-center">
               You are a member... you are awesome...
             </div>
@@ -65,8 +113,8 @@ class Athletes extends Component {
           </Col>
         </Row>
 
-        <Row>
-          <Col>
+        <Row className="m-t-md">
+          <Col xs={12}>
             <Card>
               <CardTitle>Add New Movement</CardTitle>
               <CardBody>
@@ -79,7 +127,23 @@ class Athletes extends Component {
             </Card>
           </Col>
         </Row>
-      </Row>
+
+        <Row className="m-t-md">
+          <Col xs={12}>
+            <Card>
+              <CardTitle>Add New WOD</CardTitle>
+              <CardBody>
+                <FormAddWOD
+                  availableMovements={movements}
+                  onSubmit={this.onAddWOD}
+                  error={addingMovementError}
+                  disable={addingMovement}
+                />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 }

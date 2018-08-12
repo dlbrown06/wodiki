@@ -42,7 +42,7 @@ class FormAddMovement extends Component {
           </Label>
           <Col>
             <Input
-              type="name"
+              type="text"
               name="name"
               id="name"
               placeholder="Movement Name"
@@ -63,7 +63,7 @@ class FormAddMovement extends Component {
             onChange={e => this.onInputChange("type", e.target.value)}
             disabled={disable}
             value={type}
-            onKeyPress={e => e.key === "Enter" && onSubmit(name, type)}
+            onKeyPress={e => e.key === "Enter" && this.onSubmit(name, type)}
           >
             <option disabled value={""}>
               Movement Type
@@ -77,10 +77,11 @@ class FormAddMovement extends Component {
         {error && <Alert color="danger">{error}</Alert>}
         <Button
           block
+          color="primary"
           disabled={disable || name.length < 3 || type.length === 0}
           onClick={() => this.onSubmit(name, type)}
         >
-          Login
+          Add Movement
         </Button>
       </Form>
     );
