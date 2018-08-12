@@ -30,7 +30,7 @@ module.exports = function(fastify, opts, next) {
         const db = await fastify.pg.connect();
 
         await db.query(
-          "INSERT INTO movements (id, name, type, created_by, created_on) VALUES ($1, $2, $3, $4)",
+          "INSERT INTO movements (id, name, type, created_by) VALUES ($1, $2, $3, $4)",
           [uuid(), name, type, request.user.id]
         );
 

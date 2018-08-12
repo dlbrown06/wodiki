@@ -53,13 +53,22 @@ class Athletes extends Component {
 
   onAddWOD = async wod => {
     console.log(wod);
+
+    if (wod.score.time.length > 0) {
+      const timeSepIdx = wod.score.time.indexOf(":");
+      const min = parseInt(wod.score.time.substr(0, timeSepIdx), 10);
+      const sec = parseInt(wod.score.time.substr(timeSepIdx + 1), 10);
+      wod.score.time_sec = min * 60 + sec;
+    }
+
+    console.log(wod);
+
     try {
       this.setState({ addingWODError: "", addingWOD: true });
-      const rsp = await request
+      await request
         .post("/api/wods")
         .set(...auth.tokenHeader())
         .send(wod);
-      console.log(wod);
       this.setState({ addingWOD: false });
       return true;
     } catch (err) {

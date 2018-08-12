@@ -10,6 +10,7 @@ import {
   Button,
   Alert
 } from "reactstrap";
+import _ from "lodash";
 
 import "./style.css";
 
@@ -28,8 +29,8 @@ class FormAddWOD extends Component {
     this.defaultState = {
       name: "",
       type: "",
-      rounds: "",
-      minutes: "",
+      timeCap: "",
+      forRounds: "",
       movements: [this.defaultMovement],
       score: {
         time: "",
@@ -38,7 +39,7 @@ class FormAddWOD extends Component {
       }
     };
 
-    this.state = this.defaultState;
+    this.state = _.clone(this.defaultState);
   }
 
   onInputChange = (name, value) => {
@@ -79,7 +80,7 @@ class FormAddWOD extends Component {
 
   render() {
     const { error, disable, availableMovements } = this.props;
-    const { name, type, rounds, minutes, movements, score } = this.state;
+    const { name, type, forRounds, movements, score, timeCap } = this.state;
 
     return (
       <Form className="FormAddWOD">
@@ -123,16 +124,15 @@ class FormAddWOD extends Component {
         {type === "TIME" && (
           <div>
             <FormGroup>
-              <Label for="rounds" hidden>
+              <Label for="forRounds" hidden>
                 Number of Rounds
               </Label>
               <Input
                 type="number"
-                name="rounds"
-                id="rounds"
+                name="forRounds"
                 placeholder="Number of Rounds"
-                value={rounds}
-                onChange={e => this.onInputChange("rounds", e.target.value)}
+                value={forRounds}
+                onChange={e => this.onInputChange("forRounds", e.target.value)}
                 disabled={disable}
               />
             </FormGroup>
@@ -143,12 +143,26 @@ class FormAddWOD extends Component {
               <Input
                 type="text"
                 name="time"
-                id="time"
-                placeholder="Total Time"
+                placeholder="Total Time (mm:ss)"
                 value={score.time}
                 onChange={e => this.onScoreChange("time", e.target.value)}
                 disabled={disable}
               />
+            </FormGroup>
+            <FormGroup row>
+              <Label for="timeCap" hidden>
+                Time Cap
+              </Label>
+              <Col>
+                <Input
+                  type="numeric"
+                  name="timeCap"
+                  placeholder="Time Cap (min)"
+                  value={timeCap}
+                  onChange={e => this.onInputChange("timeCap", e.target.value)}
+                  disabled={disable}
+                />
+              </Col>
             </FormGroup>
           </div>
         )}
@@ -156,16 +170,15 @@ class FormAddWOD extends Component {
         {type === "AMRAP" && (
           <div>
             <FormGroup>
-              <Label for="minutes" hidden>
-                Number of Rounds
+              <Label for="timeCap" hidden>
+                Time Cap
               </Label>
               <Input
                 type="number"
-                name="minutes"
-                id="minutes"
-                placeholder="AMRAP Time Limitation"
-                value={minutes}
-                onChange={e => this.onInputChange("minutes", e.target.value)}
+                name="timeCap"
+                placeholder="AMRAP Time (min)"
+                value={timeCap}
+                onChange={e => this.onInputChange("timeCap", e.target.value)}
                 disabled={disable}
               />
             </FormGroup>
@@ -235,7 +248,6 @@ class FormAddWOD extends Component {
                       type="number"
                       name="reps"
                       placeholder="Reps"
-                      // value={movement.reps}
                       onChange={e => {
                         movement.reps = e.target.value;
                         this.setState({ movements });
