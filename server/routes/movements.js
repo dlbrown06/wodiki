@@ -14,24 +14,27 @@ module.exports = function(fastify, opts, next) {
         type: "object",
         properties: {
           name: { type: "string" },
-          type: { type: "string" }
+          types: {
+            type: "array",
+            items: { type: "string" }
+          }
         },
-        required: ["name", "type"],
+        required: ["name", "types"],
         additionalProperties: false
       }
     },
     beforeHandler: (request, reply, done) =>
       auth.requireAthlete(fastify, request, reply, done),
     handler: async (request, reply) => {
-      const { name, type } = request.body;
+      const { name, types } = request.body;
 
       try {
         // verify the connection to the DB is live
         const db = await fastify.pg.connect();
 
         await db.query(
-          "INSERT INTO movements (id, name, type, created_by) VALUES ($1, $2, $3, $4)",
-          [uuid(), name, type, request.user.id]
+          "INSERT INTO movements (id, name, types, created_by) VALUES ($1, $2, $3, $4)",
+          [uuid(), name, types, request.user.id]
         );
 
         const { rows } = await db.query(
