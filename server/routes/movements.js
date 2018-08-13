@@ -2,7 +2,6 @@ const httpStatus = require("http-status-codes");
 const _ = require("lodash");
 const uuid = require("uuid/v4");
 
-const CONSTANTS = require("../../config/constants");
 const auth = require("./middleware/auth");
 
 module.exports = function(fastify, opts, next) {
@@ -28,10 +27,8 @@ module.exports = function(fastify, opts, next) {
     handler: async (request, reply) => {
       const { name, types } = request.body;
 
+      const db = await fastify.pg.connect();
       try {
-        // verify the connection to the DB is live
-        const db = await fastify.pg.connect();
-
         await db.query(
           "INSERT INTO movements (id, name, types, created_by) VALUES ($1, $2, $3, $4)",
           [uuid(), name, types, request.user.id]
@@ -49,6 +46,7 @@ module.exports = function(fastify, opts, next) {
           result: rows.pop()
         });
       } catch (err) {
+        db.release();
         fastify.log.error(err);
         return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
           message: "Failed to Create Movement",
@@ -64,10 +62,9 @@ module.exports = function(fastify, opts, next) {
     beforeHandler: (request, reply, done) =>
       auth.requireAthlete(fastify, request, reply, done),
     handler: async (request, reply) => {
-      try {
-        // verify the connection to the DB is live
-        const db = await fastify.pg.connect();
+      const db = await fastify.pg.connect();
 
+      try {
         const { rows } = await db.query(
           "SELECT *, count(*) over() as total_count FROM movements ORDER BY name ASC"
         );
@@ -82,6 +79,7 @@ module.exports = function(fastify, opts, next) {
           })
         });
       } catch (err) {
+        db.release();
         fastify.log.error(err);
         return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
           message: "Failed to Create Movement",

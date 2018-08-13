@@ -84,13 +84,15 @@ module.exports = function(fastify, opts, next) {
           // add the moments
           for (let movement of movements) {
             await db.query(
-              "INSERT INTO wod_movements (id, wod_id, movement_id, weight, reps) VALUES($1, $2, $3, $4, $5)",
+              "INSERT INTO wod_movements (id, wod_id, movement_id, weight, reps, height, distance) VALUES($1, $2, $3, $4, $5, $6, $7)",
               [
                 uuid(),
                 wodId,
                 movement.id,
                 movement.weight === "" ? null : movement.weight,
-                movement.reps === "" ? null : movement.reps
+                movement.reps === "" ? null : movement.reps,
+                movement.height === "" ? null : movement.height,
+                movement.distance === "" ? null : movement.distance
               ]
             );
           }
@@ -140,8 +142,9 @@ module.exports = function(fastify, opts, next) {
     handler: async (request, reply) => {
       const { athlete_id } = request.params;
 
+      const db = await fastify.pg.connect();
+
       try {
-        const db = await fastify.pg.connect();
         const { rows } = await db.query(
           `
           SELECT
@@ -166,6 +169,8 @@ module.exports = function(fastify, opts, next) {
           [athlete_id]
         );
 
+        db.release();
+
         return reply.send({
           count: rows.length ? rows[0].total_records : 0,
           results: rows.map(row => {
@@ -174,6 +179,7 @@ module.exports = function(fastify, opts, next) {
           })
         });
       } catch (err) {
+        db.release();
         fastify.log.error(err);
         return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
           message: "Failed to Fetch WODs",
