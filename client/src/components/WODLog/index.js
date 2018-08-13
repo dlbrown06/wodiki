@@ -10,10 +10,11 @@ class WODLog extends Component {
 
     return (
       <div className="WODLog">
-        <h4>
-          {moment(wod.created_on).format("ddd MM/DD")}
+        <h2>
+          {moment(wod.created_on).format("ddd, M/DD")}
           {wod.name.length > 0 && ` - ${wod.name}`}
-        </h4>
+          <span className="pull-right text-muted">{wod.type}</span>
+        </h2>
       </div>
     );
   }
