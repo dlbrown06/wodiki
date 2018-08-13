@@ -1,6 +1,16 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { Col, Form, FormGroup, Label, Input, Button, Alert } from "reactstrap";
+import {
+  Row,
+  Col,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Button,
+  Alert,
+  ButtonGroup
+} from "reactstrap";
 
 import "./style.css";
 
@@ -10,7 +20,8 @@ class FormAddMovement extends Component {
 
     this.state = {
       name: "",
-      type: ""
+      types: [],
+      movementTypes: ["REPS", "WEIGHT", "HEIGHT", "DISTANCE"]
     };
   }
 
@@ -20,19 +31,31 @@ class FormAddMovement extends Component {
     this.setState(state);
   };
 
-  onSubmit = async () => {
-    const { onSubmit } = this.props;
-    const { name, type } = this.state;
+  onMovementTypeClick = selected => {
+    const { types } = this.state;
+    const index = types.indexOf(selected);
+    if (index < 0) {
+      types.push(selected);
+    } else {
+      types.splice(index, 1);
+    }
+    this.setState({ types: [...types] });
+  };
 
-    const result = await onSubmit(name, type);
+  onSubmit = async e => {
+    e.preventDefault();
+    const { onSubmit } = this.props;
+    const { name, types } = this.state;
+
+    const result = await onSubmit(name, types);
     if (result) {
-      this.setState({ name: "", type: "" });
+      this.setState({ name: "", types: [] });
     }
   };
 
   render() {
     const { error, disable } = this.props;
-    const { name, type } = this.state;
+    const { name, types, movementTypes } = this.state;
 
     return (
       <Form className="FormAddMovement">
@@ -52,34 +75,36 @@ class FormAddMovement extends Component {
             />
           </Col>
         </FormGroup>
+
         <FormGroup>
-          <Label for="movementType" hidden>
-            Movement Type
-          </Label>
-          <Input
-            type="select"
-            name="select"
-            id="movementType"
-            onChange={e => this.onInputChange("type", e.target.value)}
-            disabled={disable}
-            value={type}
-            onKeyPress={e => e.key === "Enter" && this.onSubmit(name, type)}
-          >
-            <option disabled value={""}>
-              Movement Type
-            </option>
-            <option>WEIGHT</option>
-            <option>REPETITIONS</option>
-            <option>DISTANCE</option>
-            <option>HEIGHT</option>
-          </Input>
+          <Label>Movement Types</Label>
+          <div className="text-center">
+            <ButtonGroup>
+              {movementTypes.map((type, key) => (
+                <Button
+                  key={key}
+                  color={types.includes(type) ? "info" : "default"}
+                  onClick={() => this.onMovementTypeClick(type)}
+                  active={types.includes(type)}
+                >
+                  {type}
+                </Button>
+              ))}
+            </ButtonGroup>
+          </div>
         </FormGroup>
-        {error && <Alert color="danger">{error}</Alert>}
+
+        {error && (
+          <FormGroup>
+            <Alert color="danger">{error}</Alert>
+          </FormGroup>
+        )}
+
         <Button
           block
           color="primary"
-          disabled={disable || name.length < 3 || type.length === 0}
-          onClick={() => this.onSubmit(name, type)}
+          disabled={disable || name.length < 3 || types.length === 0}
+          onClick={this.onSubmit}
         >
           Add Movement
         </Button>

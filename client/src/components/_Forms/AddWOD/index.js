@@ -21,9 +21,11 @@ class FormAddWOD extends Component {
     this.defaultMovement = {
       id: "",
       name: "",
-      type: "",
+      types: [],
       reps: "",
-      weight: ""
+      weight: "",
+      distance: "",
+      height: ""
     };
 
     this.defaultState = {
@@ -68,6 +70,12 @@ class FormAddWOD extends Component {
     this.setState({ movements });
   };
 
+  removeMovement = () => {
+    const { movements } = this.state;
+    movements.pop();
+    this.setState({ movements });
+  };
+
   onSubmit = async () => {
     const { onSubmit } = this.props;
     const { state } = this;
@@ -85,37 +93,31 @@ class FormAddWOD extends Component {
 
     return (
       <Form className="FormAddWOD">
-        <FormGroup row>
-          <Label for="wodName" hidden>
-            WOD Name
-          </Label>
-          <Col>
-            <Input
-              type="text"
-              name="name"
-              id="name"
-              placeholder="WOD Name"
-              value={name}
-              onChange={e => this.onInputChange("name", e.target.value)}
-              disabled={disable}
-            />
-          </Col>
+        <FormGroup>
+          <Label for="wodName">WOD Name</Label>
+          <Input
+            type="text"
+            name="wodName"
+            placeholder="Enter WOD Name"
+            value={name}
+            onChange={e => this.onInputChange("name", e.target.value)}
+            disabled={disable}
+          />
         </FormGroup>
         <FormGroup>
-          <Label for="scoreType" hidden>
-            Score Type
+          <Label for="scoreType">
+            Score Type <span className="text-danger">*</span>
           </Label>
           <Input
             type="select"
             name="select"
-            id="scoreType"
             onChange={e => this.onInputChange("type", e.target.value)}
             disabled={disable}
             value={type}
             onKeyPress={e => e.key === "Enter" && this.onSubmit(name, type)}
           >
             <option disabled value={""}>
-              Score Type
+              Select Score Type
             </option>
             <option value="TIME">For Time</option>
             <option value="AMRAP">AMRAP</option>
@@ -125,8 +127,8 @@ class FormAddWOD extends Component {
         {type === "TIME" && (
           <div>
             <FormGroup>
-              <Label for="forRounds" hidden>
-                Number of Rounds
+              <Label for="forRounds">
+                Number of Rounds <span className="text-danger">*</span>
               </Label>
               <Input
                 type="number"
@@ -138,55 +140,108 @@ class FormAddWOD extends Component {
               />
             </FormGroup>
             <FormGroup>
-              <Label for="text" hidden>
-                Total Time
-              </Label>
+              <Label for="timeCap">Time Cap</Label>
               <Input
-                type="text"
-                name="time"
-                placeholder="Total Time (mm:ss)"
-                value={score.time}
-                onChange={e => this.onScoreChange("time", e.target.value)}
-                disabled={disable}
-              />
-            </FormGroup>
-            <FormGroup row>
-              <Label for="timeCap" hidden>
-                Time Cap
-              </Label>
-              <Col>
-                <Input
-                  type="numeric"
-                  name="timeCap"
-                  placeholder="Time Cap (min)"
-                  value={timeCap}
-                  onChange={e => this.onInputChange("timeCap", e.target.value)}
-                  disabled={disable}
-                />
-              </Col>
-            </FormGroup>
-          </div>
-        )}
-
-        {type === "AMRAP" && (
-          <div>
-            <FormGroup>
-              <Label for="timeCap" hidden>
-                Time Cap
-              </Label>
-              <Input
-                type="number"
+                type="numeric"
                 name="timeCap"
-                placeholder="AMRAP Time (min)"
+                placeholder="Time Cap (min)"
                 value={timeCap}
                 onChange={e => this.onInputChange("timeCap", e.target.value)}
                 disabled={disable}
               />
             </FormGroup>
+          </div>
+        )}
+
+        {type === "AMRAP" && (
+          <FormGroup>
+            <Label for="timeCap">
+              Time Limit (min) <span className="text-danger">*</span>
+            </Label>
+            <Input
+              type="number"
+              name="timeCap"
+              placeholder="AMRAP Time (min)"
+              value={timeCap}
+              onChange={e => this.onInputChange("timeCap", e.target.value)}
+              disabled={disable}
+            />
+          </FormGroup>
+        )}
+
+        {movements.length > 0 && (
+          <div>
+            <hr />
+            {movements.map((movement, key) => (
+              <div key={key}>
+                <FormGroup>
+                  <Label for="movement">Movement {key + 1}</Label>
+                  <Input
+                    type="select"
+                    name="movement"
+                    onChange={e => this.onMovementChange(key, e.target.value)}
+                    disabled={disable}
+                    value={movement.id}
+                    bsSize="sm"
+                  >
+                    <option disabled value={""}>
+                      Select Movement
+                    </option>
+                    {availableMovements.map((option, optKey) => (
+                      <option value={option.id} key={optKey}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </Input>
+                </FormGroup>
+
+                <Row>
+                  {movement.types.map((type, typeKey) => (
+                    <Col xs={6}>
+                      <FormGroup key={typeKey}>
+                        <Label>{_.startCase(type.toLowerCase())}</Label>
+                        <Input
+                          type="number"
+                          placeholder={`Enter ${_.startCase(
+                            type.toLowerCase()
+                          )}`}
+                          value={movement[type.toLowerCase()]}
+                          bsSize="sm"
+                          onChange={e => {
+                            movement[type.toLowerCase()] = e.target.value;
+                            this.setState({ movements });
+                          }}
+                          disabled={disable || movement.id.length === 0}
+                        />
+                      </FormGroup>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {type.length > 0 && <hr />}
+
+        {type === "TIME" && (
+          <FormGroup>
+            <Label for="text">WOD Score - Total Time</Label>
+            <Input
+              type="text"
+              name="time"
+              placeholder="Total Time (mm:ss)"
+              value={score.time}
+              onChange={e => this.onScoreChange("time", e.target.value)}
+              disabled={disable}
+            />
+          </FormGroup>
+        )}
+
+        {type === "AMRAP" && (
+          <div>
             <FormGroup>
-              <Label for="text" hidden>
-                Total Rounds
-              </Label>
+              <Label for="text">WOD Score - Total Rounds</Label>
               <Input
                 type="text"
                 name="rounds"
@@ -197,9 +252,7 @@ class FormAddWOD extends Component {
               />
             </FormGroup>
             <FormGroup>
-              <Label for="text" hidden>
-                Additional Reps
-              </Label>
+              <Label for="text">WOD Score - Additional Reps</Label>
               <Input
                 type="text"
                 name="reps"
@@ -209,75 +262,6 @@ class FormAddWOD extends Component {
                 disabled={disable}
               />
             </FormGroup>
-          </div>
-        )}
-
-        {movements.length > 0 && (
-          <div>
-            <hr />
-            {movements.map((movement, key) => (
-              <Row key={key}>
-                <Col xs={12}>
-                  <FormGroup>
-                    <Label for="movement" hidden>
-                      Score Type
-                    </Label>
-                    <Input
-                      type="select"
-                      name="movement"
-                      onChange={e => this.onMovementChange(key, e.target.value)}
-                      disabled={disable}
-                      value={movement.id}
-                    >
-                      <option disabled value={""}>
-                        Select Movement
-                      </option>
-                      {availableMovements.map((option, optKey) => (
-                        <option value={option.id} key={optKey}>
-                          {option.name}
-                        </option>
-                      ))}
-                    </Input>
-                  </FormGroup>
-                </Col>
-                <Col xs={6}>
-                  <FormGroup>
-                    <Label for="reps" hidden>
-                      Reps
-                    </Label>
-                    <Input
-                      type="number"
-                      name="reps"
-                      placeholder="Reps"
-                      value={movement.reps}
-                      onChange={e => {
-                        movement.reps = e.target.value;
-                        this.setState({ movements });
-                      }}
-                      disabled={disable || movement.id.length === 0}
-                    />
-                  </FormGroup>
-                </Col>
-                <Col xs={6}>
-                  <FormGroup>
-                    <Label for="weight" hidden>
-                      Reps
-                    </Label>
-                    <Input
-                      type="number"
-                      name="weight"
-                      placeholder="Weight"
-                      value={movement.weight}
-                      onChange={e => {
-                        movement.weight = e.target.value;
-                        this.setState({ movements });
-                      }}
-                      disabled={disable || movement.id.length === 0}
-                    />
-                  </FormGroup>
-                </Col>
-              </Row>
-            ))}
           </div>
         )}
 
@@ -300,7 +284,7 @@ class FormAddWOD extends Component {
                   <Button
                     block
                     disabled={disable}
-                    onClick={() => this.addMovement()}
+                    onClick={() => this.removeMovement()}
                   >
                     -
                   </Button>

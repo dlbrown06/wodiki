@@ -1,5 +1,13 @@
 import React, { Component } from "react";
-import { Container, Row, Col, Card, CardBody, CardTitle } from "reactstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Button
+} from "reactstrap";
 import request from "superagent";
 
 import FormAddMovement from "../../components/_Forms/AddMovement";
@@ -33,17 +41,17 @@ class Athletes extends Component {
     return Promise.all[(this.onFetchMovements(), this.onFetchWODs())];
   }
 
-  onAddMovement = async (name, type) => {
+  onAddMovement = async (name, types) => {
     try {
       this.setState({ addingMovementError: "", addingMovement: true });
-      const rsp = await request
+      await request
         .post("/api/movements")
         .set(...auth.tokenHeader())
         .send({
           name,
-          type
+          types
         });
-      this.setState({ addingMovement: false });
+      this.setState({ addingMovement: false, addMovementModal: false });
       return true;
     } catch (err) {
       console.error(err);
@@ -120,7 +128,14 @@ class Athletes extends Component {
   };
 
   render() {
-    const { addingMovement, addingMovementError, movements, wods } = this.state;
+    const {
+      addingMovement,
+      addingMovementError,
+      movements,
+      wods,
+      addingWOD,
+      addingWODError
+    } = this.state;
     return (
       <Container className="Athletes">
         <Row className="m-t-md">
@@ -145,32 +160,25 @@ class Athletes extends Component {
 
         <Row className="m-t-md">
           <Col xs={12}>
-            <Card>
-              <CardTitle>Add New Movement</CardTitle>
-              <CardBody>
-                <FormAddMovement
-                  onSubmit={this.onAddMovement}
-                  error={addingMovementError}
-                  disable={addingMovement}
-                />
-              </CardBody>
-            </Card>
+            <Button
+              color="info"
+              block
+              onClick={() => this.setState({ addMovementModal: true })}
+            >
+              Add Movement
+            </Button>
           </Col>
         </Row>
 
         <Row className="m-t-md">
           <Col xs={12}>
-            <Card>
-              <CardTitle>Add New WOD</CardTitle>
-              <CardBody>
-                <FormAddWOD
-                  availableMovements={movements}
-                  onSubmit={this.onAddWOD}
-                  error={addingMovementError}
-                  disable={addingMovement}
-                />
-              </CardBody>
-            </Card>
+            <Button
+              color="info"
+              block
+              onClick={() => this.setState({ addWODModal: true })}
+            >
+              Add WOD
+            </Button>
           </Col>
         </Row>
 
@@ -179,6 +187,58 @@ class Athletes extends Component {
             <WODLogs wods={wods} />
           </Col>
         </Row>
+
+        {/*Modals*/}
+        <section>
+          <Modal
+            isOpen={this.state.addMovementModal}
+            toggle={() =>
+              this.setState({ addMovementModal: !this.state.addMovementModal })
+            }
+          >
+            <ModalHeader
+              toggle={() =>
+                this.setState({
+                  addMovementModal: !this.state.addMovementModal
+                })
+              }
+            >
+              Add Movement
+            </ModalHeader>
+            <ModalBody>
+              <FormAddMovement
+                onSubmit={this.onAddMovement}
+                error={addingMovementError}
+                disable={addingMovement}
+              />
+            </ModalBody>
+          </Modal>
+
+          <Modal
+            isOpen={this.state.addWODModal}
+            toggle={() =>
+              this.setState({ addWODModal: !this.state.addWODModal })
+            }
+          >
+            <ModalHeader
+              toggle={() =>
+                this.setState({
+                  addWODModal: !this.state.addWODModal
+                })
+              }
+            >
+              Add WOD
+            </ModalHeader>
+            <ModalBody>
+              <FormAddWOD
+                availableMovements={movements}
+                onSubmit={this.onAddWOD}
+                error={addingWODError}
+                disable={addingWOD}
+              />
+            </ModalBody>
+          </Modal>
+        </section>
       </Container>
     );
   }
