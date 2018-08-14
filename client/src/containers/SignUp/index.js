@@ -3,55 +3,47 @@ import { Card } from "reactstrap";
 import request from "superagent";
 import httpStatus from "http-status-codes";
 
-import auth from "../../auth";
-import history from "../../history";
-import LoginForm from "../../components/_Forms/Login";
+import FormSignUp from "../../components/_Forms/SignUp";
 
-class Login extends Component {
+class SignUp extends Component {
   constructor() {
     super();
 
     this.state = {
-      loginError: undefined,
+      signupError: undefined,
       disableForm: false
     };
   }
 
   onSubmit = async (email, password) => {
-    this.setState({ disableForm: true, loginError: null });
+    this.setState({ disableForm: true, signupError: null });
 
     try {
       const rsp = await request
-        .post("/api/athletes/login")
+        .post("/api/athletes/signup")
         .send({ email, password });
 
       if (rsp.status === httpStatus.OK) {
-        auth.login(
-          rsp.body.id,
-          rsp.body.email,
-          rsp.body.is_admin,
-          rsp.body.token
-        );
-        return history.push("/athletes");
+        this.setState({ loginError: `Woot: ${rsp.body.message}` });
       } else {
         this.setState({ loginError: rsp.body.message });
       }
     } catch (err) {
       console.log(err);
-      this.setState({ loginError: "Invalid Email / Password" });
+      this.setState({ signupError: "Unable to Create New Athlete" });
     }
 
     this.setState({ disableForm: false });
   };
 
   render() {
-    const { loginError, disableForm } = this.state;
+    const { signupError, disableForm } = this.state;
 
     return (
-      <Card body>
-        <LoginForm
+      <Card body className={this.props.className}>
+        <FormSignUp
           onSubmit={this.onSubmit}
-          error={loginError}
+          error={signupError}
           disable={disableForm}
         />
       </Card>
@@ -59,4 +51,4 @@ class Login extends Component {
   }
 }
 
-export default Login;
+export default SignUp;

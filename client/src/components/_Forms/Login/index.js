@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Col, Form, FormGroup, Label, Input, Button, Alert } from "reactstrap";
 
 import "./style.css";
+import history from "../../../history";
 
 class FormLogin extends Component {
   constructor() {
