@@ -4,7 +4,7 @@ import { Progress } from "reactstrap";
 
 class PasswordComplexityProgress extends Component {
   render() {
-    const { password } = this.props;
+    const { password, disabled } = this.props;
 
     let percent = 0;
     const point = 10;
@@ -47,16 +47,23 @@ class PasswordComplexityProgress extends Component {
 
     return (
       <div>
-        <Progress className="PasswordComplexity" value={percent} />
+        <Progress
+          className="PasswordComplexity"
+          value={percent}
+          disabled={disabled}
+        />
       </div>
     );
   }
 }
 
 PasswordComplexityProgress.propTypes = {
-  password: PropTypes.string.isRequired
+  password: PropTypes.string.isRequired,
+  disabled: PropTypes.bool
 };
 
-PasswordComplexityProgress.defaultProps = {};
+PasswordComplexityProgress.defaultProps = {
+  disabled: false
+};
 
 export default PasswordComplexityProgress;
