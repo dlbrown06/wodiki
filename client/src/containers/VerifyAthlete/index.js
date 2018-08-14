@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import qs from "query-string";
+import qs from "querystring";
 import { Alert, Button } from "reactstrap";
 import request from "superagent";
 
@@ -20,7 +20,7 @@ class VerifyAthlete extends Component {
 
   async componentDidMount() {
     try {
-      const { email, token } = qs.parse(this.props.location.search);
+      const { email, token } = qs.parse(this.props.location.search.substr(1));
       this.setState({ verifying: true });
       await request.get("/api/athletes/verify").query({ email, token });
 
