@@ -1,6 +1,6 @@
 const httpStatus = require("http-status-codes");
 const _ = require("lodash");
-const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 const uuid = require("uuid/v4");
 
 const CONSTANTS = require("../../config/constants");
@@ -23,56 +23,68 @@ module.exports = function(fastify, opts, next) {
       }
     },
     handler: async (request, reply) => {
-      // verify the connection to the DB is live
       const db = await fastify.pg.connect();
 
-      const { email, password } = request.body;
+      try {
+        const { email, password } = request.body;
 
-      if (email === SYS_ACCT.EMAIL && password === SYS_ACCT.PASSWORD) {
-        // get the sys account from the DB
-        const { rows } = await db.query(
-          "SELECT * FROM athletes WHERE email=$1",
-          [email]
-        );
-        db.release();
+        if (email === SYS_ACCT.EMAIL && password === SYS_ACCT.PASSWORD) {
+          // get the sys account from the DB
+          const { rows } = await db.query(
+            "SELECT * FROM athletes WHERE email=$1",
+            [email]
+          );
+          db.release();
 
-        if (!rows.length) {
-          return reply.status(httpStatus.UNAUTHORIZED).send({
-            message: "System Account Not Setup"
+          if (!rows.length) {
+            return reply.status(httpStatus.UNAUTHORIZED).send({
+              message: "System Account Not Setup"
+            });
+          }
+
+          const user = _.first(rows);
+          const payload = {
+            id: user.id,
+            email: user.email,
+            is_admin: user.is_admin
+          };
+
+          // put more detail in the payload
+          const token = fastify.jwt.sign(payload);
+          fastify.log.info(`Token Generated for email '${email}': ${token}`);
+
+          payload.token = token;
+          payload.message = "User Authenticated";
+          reply.send(payload);
+        } else {
+          reply.status(httpStatus.UNAUTHORIZED).send({
+            message: "Invalid Athlete Login"
           });
         }
-
-        const user = _.first(rows);
-        const payload = {
-          id: user.id,
-          email: user.email,
-          is_admin: user.is_admin
-        };
-
-        // put more detail in the payload
-        const token = fastify.jwt.sign(payload);
-        fastify.log.info(`Token Generated for email '${email}': ${token}`);
-
-        payload.token = token;
-        payload.message = "User Authenticated";
-        reply.send(payload);
-      } else {
-        reply.status(httpStatus.UNAUTHORIZED).send({
-          message: "Invalid Athlete Login"
+      } catch (err) {
+        fastify.log.error(err);
+        reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+          message: `Failed to Login Athlete: ${err.toString()}`
         });
+      } finally {
+        db.release();
       }
     }
   });
 
   fastify.route({
     method: "POST",
-    url: "/athletes/signup",
+    url: "/athletes/register",
     schema: {
       body: {
         type: "object",
         properties: {
-          email: { type: "string" },
-          password: { type: "string" }
+          email: { type: "string", format: "email" },
+          password: { type: "string" },
+          first_name: { type: "string" },
+          last_name: { type: "string" },
+          gender: { type: "string" },
+          birthday: { type: "string", format: "date" }
         },
         required: ["email", "password"],
         additionalProperties: false
@@ -88,26 +100,20 @@ module.exports = function(fastify, opts, next) {
         birthday
       } = request.body;
 
-      const genRandomString = length => {
-        return crypto
-          .randomBytes(Math.ceil(length / 2))
-          .toString("hex")
-          .slice(0, length);
-      };
+      const genSalt = async rounds =>
+        new Promise((resolve, reject) => {
+          bcrypt.genSalt(rounds, (err, salt) => err ? reject(err) : resolve(salt));
+        });
 
-      const sha512 = (pass, salt) => {
-        const hash = crypto.createHmac(
-          "sha512",
-          salt
-        ); /** Hashing algorithm sha512 */
-        hash.update(pass);
-        return hash.digest("hex");
-      };
+      const genHash = async (password, salt) =>
+        new Promise((resolve, reject) => {
+          bcrypt.hash(password, salt, (err, hash) => err ? reject(err) : resolve(hash));
+        });
 
       const db = await fastify.pg.connect();
       try {
-        const salt = genRandomString(16);
-        const hash = sha512(password, salt);
+        const salt = await genSalt(16);
+        const hash = await genHash(password, salt);
 
         // first verify this email doesn't exist
         const { rowCount: athleteFound } = await db.query(
@@ -147,49 +153,6 @@ module.exports = function(fastify, opts, next) {
       } finally {
         db.release();
       }
-
-      console.log("Email", email);
-      console.log("Password", password);
-      console.log("Salt", salt);
-      console.log("Hash", hash);
-
-      reply.status(httpStatus.UNAUTHORIZED).send({
-        message: "Invalid Athlete Signup"
-      });
-
-      /*if (email === SYS_ACCT.EMAIL && password === SYS_ACCT.PASSWORD) {
-        // get the sys account from the DB
-        const { rows } = await db.query(
-          "SELECT * FROM athletes WHERE email=$1",
-          [email]
-        );
-        db.release();
-
-        if (!rows.length) {
-          return reply.status(httpStatus.UNAUTHORIZED).send({
-            message: "System Account Not Setup"
-          });
-        }
-
-        const user = _.first(rows);
-        const payload = {
-          id: user.id,
-          email: user.email,
-          is_admin: user.is_admin
-        };
-
-        // put more detail in the payload
-        const token = fastify.jwt.sign(payload);
-        fastify.log.info(`Token Generated for email '${email}': ${token}`);
-
-        payload.token = token;
-        payload.message = "User Authenticated";
-        reply.send(payload);
-      } else {
-        reply.status(httpStatus.UNAUTHORIZED).send({
-          message: "Invalid Athlete Login"
-        });
-      }*/
     }
   });
 

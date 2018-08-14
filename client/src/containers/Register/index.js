@@ -3,47 +3,48 @@ import { Card } from "reactstrap";
 import request from "superagent";
 import httpStatus from "http-status-codes";
 
-import FormSignUp from "../../components/_Forms/SignUp";
+import FormRegister from "../../components/_Forms/Register";
 
-class SignUp extends Component {
+class Register extends Component {
   constructor() {
     super();
 
     this.state = {
-      signupError: undefined,
+      registerError: undefined,
       disableForm: false
     };
   }
 
-  onSubmit = async (email, password) => {
-    this.setState({ disableForm: true, signupError: null });
+  onSubmit = async params => {
+    this.setState({ disableForm: true, registerError: null });
 
     try {
-      const rsp = await request
-        .post("/api/athletes/signup")
-        .send({ email, password });
-
+      const rsp = await request.post("/api/athletes/register").send(params);
       if (rsp.status === httpStatus.OK) {
         this.setState({ loginError: `Woot: ${rsp.body.message}` });
       } else {
         this.setState({ loginError: rsp.body.message });
       }
     } catch (err) {
-      console.log(err);
-      this.setState({ signupError: "Unable to Create New Athlete" });
+      console.error(err);
+      this.setState({
+        registerError: `Failure to Register: ${
+          err.response ? err.response.body.message : JSON.stringify(err)
+        }`
+      });
     }
 
     this.setState({ disableForm: false });
   };
 
   render() {
-    const { signupError, disableForm } = this.state;
+    const { registerError, disableForm } = this.state;
 
     return (
       <Card body className={this.props.className}>
-        <FormSignUp
+        <FormRegister
           onSubmit={this.onSubmit}
-          error={signupError}
+          error={registerError}
           disable={disableForm}
         />
       </Card>
@@ -51,4 +52,4 @@ class SignUp extends Component {
   }
 }
 
-export default SignUp;
+export default Register;

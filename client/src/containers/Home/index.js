@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Row } from "reactstrap";
 
 import Login from "../Login";
-import SignUp from "../SignUp";
+import Register from "../Register";
 
 import "./style.css";
 
@@ -38,7 +38,7 @@ class Home extends Component {
 
           <Login />
 
-          <SignUp className="m-t-md" />
+          <Register className="m-t-md" />
         </div>
       </Row>
     );

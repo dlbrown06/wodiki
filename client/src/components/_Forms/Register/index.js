@@ -1,19 +1,10 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import {
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  Button,
-  Alert,
-  Progress
-} from "reactstrap";
+import { Form, FormGroup, Label, Input, Button, Alert } from "reactstrap";
 
-import "./style.css";
-import history from "../../../history";
+import PasswordComplexityProgress from "../../PasswordComplexityProgress";
 
-class FormSignUp extends Component {
+class FormRegister extends Component {
   constructor() {
     super();
 
@@ -25,63 +16,69 @@ class FormSignUp extends Component {
       gender: "Private",
       birthday: "",
       genderOptions: ["Private", "Male", "Female"],
-      passwordComplexity: 0
+      formValidationError: ""
     };
   }
 
   onInputChange = (name, value) => {
     const state = this.state;
     state[name] = value;
-
-    if (name === "password") {
-      let percent = 0;
-      const point = 10;
-
-      if (value.length > 6) {
-        percent += point;
-      }
-
-      if (value.length > 8) {
-        percent += point;
-      }
-
-      if (value.length > 10) {
-        percent += point + 10;
-      }
-
-      if (value.length > 12) {
-        percent += point + 10;
-      }
-
-      const alphaLower = RegExp("[a-z]+");
-      if (alphaLower.test(value)) {
-        percent += point;
-      }
-
-      const alphaUpper = RegExp("[A-Z]+");
-      if (alphaUpper.test(value)) {
-        percent += point;
-      }
-
-      const numbers = RegExp("[0-9]+");
-      if (numbers.test(value)) {
-        percent += point;
-      }
-
-      const oddChars = RegExp(/[\!\@\#\$\%\^\&\*\(\)\-\+\=\<\>\,\.]+/);
-      if (oddChars.test(value)) {
-        percent += point;
-      }
-
-      state.passwordComplexity = percent;
-      console.log(percent);
-    }
-
     this.setState(state);
   };
 
+  onSubmit = async () => {
+    const { onSubmit, disable } = this.props;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      gender,
+      birthday,
+      genderOptions
+    } = this.state;
+
+    if (disable) return;
+
+    const validateEmail = email => {
+      const regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return regex.test(String(email).toLowerCase());
+    };
+
+    /**
+     * Validate the Form Inputs
+     */
+
+    if (!validateEmail(email)) {
+      return this.setState({ formValidationError: "Invalid Email Provided" });
+    }
+
+    if (password.length < 6) {
+      return this.setState({
+        formValidationError: "Password must be at least 6 characters"
+      });
+    }
+
+    if (genderOptions.indexOf(gender) === -1) {
+      return this.setState({ formValidationError: "Invalid Gender Selection" });
+    }
+
+    if (birthday.length > 0 && new Date(birthday) === "Invalid Date") {
+      return this.setState({ formValidationError: "Invalid Gender Selection" });
+    }
+
+    onSubmit({
+      email,
+      password,
+      first_name: firstName,
+      last_name: lastName,
+      gender,
+      birthday
+    });
+  };
+
   render() {
-    const { error, onSubmit, disable } = this.props;
+    const { error, disable } = this.props;
     const {
       email,
       password,
@@ -90,7 +87,7 @@ class FormSignUp extends Component {
       gender,
       birthday,
       genderOptions,
-      passwordComplexity
+      formValidationError
     } = this.state;
 
     return (
@@ -121,7 +118,7 @@ class FormSignUp extends Component {
         </FormGroup>
 
         <FormGroup>
-          <Progress value={passwordComplexity} />
+          <PasswordComplexityProgress password={password} />
         </FormGroup>
 
         <hr />
@@ -132,7 +129,7 @@ class FormSignUp extends Component {
             type="text"
             placeholder="Enter First Name"
             value={firstName}
-            onChange={e => this.onInputChange("password", e.target.value)}
+            onChange={e => this.onInputChange("firstName", e.target.value)}
             disabled={disable}
           />
         </FormGroup>
@@ -173,12 +170,17 @@ class FormSignUp extends Component {
           />
         </FormGroup>
 
-        {error && <Alert color="danger">{error}</Alert>}
+        {formValidationError.length > 0 ? (
+          <Alert color="danger">{formValidationError}</Alert>
+        ) : (
+          error && <Alert color="danger">{error}</Alert>
+        )}
+
         <Button
           block
           color="primary"
-          disabled={disable}
-          onClick={() => onSubmit(email, password)}
+          disabled={disable || email.length < 5 || password.length < 6}
+          onClick={() => this.onSubmit()}
         >
           Sign Up
         </Button>
@@ -187,15 +189,15 @@ class FormSignUp extends Component {
   }
 }
 
-FormSignUp.propTypes = {
+FormRegister.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   error: PropTypes.string,
   disable: PropTypes.bool
 };
 
-FormSignUp.defaultProps = {
+FormRegister.defaultProps = {
   error: undefined,
   disable: false
 };
 
-export default FormSignUp;
+export default FormRegister;
