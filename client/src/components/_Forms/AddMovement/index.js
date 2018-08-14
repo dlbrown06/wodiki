@@ -21,7 +21,7 @@ class FormAddMovement extends Component {
     this.state = {
       name: "",
       types: [],
-      movementTypes: ["REPS", "WEIGHT", "HEIGHT", "DISTANCE"]
+      movementTypes: ["REPS", "WEIGHT", "HEIGHT", "DISTANCE", "CALORIES"]
     };
   }
 
@@ -79,7 +79,7 @@ class FormAddMovement extends Component {
         <FormGroup>
           <Label>Movement Types</Label>
           <div className="text-center">
-            <ButtonGroup>
+            <ButtonGroup vertical>
               {movementTypes.map((type, key) => (
                 <Button
                   key={key}

@@ -15,16 +15,22 @@ const requireAthlete = (fastify, request, reply, done) => {
   try {
     const auth = request.headers.authorization;
     const token = auth.substr(auth.indexOf(" ") + 1);
-    request.user = fastify.jwt.verify(token);
+
+    fastify.jwt.verify(token, (err, decoded) => {
+      if (err) throw err;
+
+      request.athlete = decoded;
+      return done();
+    });
+
+
   } catch (err) {
     request.log.error(err);
-    return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
+    return reply.status(httpStatus.FORBIDDEN).send({
       message: "Failure to Verify Authentication",
       error: err
     });
   }
-
-  return done();
 };
 
 module.exports = {

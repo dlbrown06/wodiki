@@ -75,7 +75,7 @@ module.exports = function(fastify, opts, next) {
               type,
               forRounds === "" ? null : forRounds,
               timeCap === "" ? null : timeCapSec,
-              request.user.id
+              request.athlete.id
             ]
           );
 
@@ -169,8 +169,6 @@ module.exports = function(fastify, opts, next) {
           [athlete_id]
         );
 
-        db.release();
-
         return reply.send({
           count: rows.length ? rows[0].total_records : 0,
           results: rows.map(row => {
@@ -179,12 +177,13 @@ module.exports = function(fastify, opts, next) {
           })
         });
       } catch (err) {
-        db.release();
         fastify.log.error(err);
         return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
           message: "Failed to Fetch WODs",
           error: err.toString()
         });
+      } finally {
+        db.release();
       }
     }
   });

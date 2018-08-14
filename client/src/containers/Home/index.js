@@ -38,7 +38,7 @@ class Home extends Component {
 
           <Login />
 
-          <Register className="m-t-md" />
+          {/*<Register className="m-t-md" />*/}
         </div>
       </Row>
     );

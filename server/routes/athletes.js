@@ -96,7 +96,14 @@ module.exports = function(fastify, opts, next) {
           is_admin: athlete.is_admin
         };
 
-        const token = fastify.jwt.sign(payload);
+        const token = await new Promise((resolve, reject) => {
+          fastify.jwt.sign(
+            payload,
+            { expiresIn: "7d" },
+            (err, token) => (err ? reject(err) : resolve(token))
+          );
+        });
+
         fastify.log.info(`Token Generated for email '${email}': ${token}`);
 
         // save the token in a athlete sessions table
