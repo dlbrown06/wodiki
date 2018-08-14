@@ -1,6 +1,14 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { Col, Form, FormGroup, Label, Input, Button, Alert } from "reactstrap";
+import {
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Button,
+  Alert,
+  Progress
+} from "reactstrap";
 
 import "./style.css";
 import history from "../../../history";
@@ -16,13 +24,59 @@ class FormSignUp extends Component {
       lastName: "",
       gender: "Private",
       birthday: "",
-      genderOptions: ["Private", "Male", "Female"]
+      genderOptions: ["Private", "Male", "Female"],
+      passwordComplexity: 0
     };
   }
 
   onInputChange = (name, value) => {
     const state = this.state;
     state[name] = value;
+
+    if (name === "password") {
+      let percent = 0;
+      const point = 10;
+
+      if (value.length > 6) {
+        percent += point;
+      }
+
+      if (value.length > 8) {
+        percent += point;
+      }
+
+      if (value.length > 10) {
+        percent += point + 10;
+      }
+
+      if (value.length > 12) {
+        percent += point + 10;
+      }
+
+      const alphaLower = RegExp("[a-z]+");
+      if (alphaLower.test(value)) {
+        percent += point;
+      }
+
+      const alphaUpper = RegExp("[A-Z]+");
+      if (alphaUpper.test(value)) {
+        percent += point;
+      }
+
+      const numbers = RegExp("[0-9]+");
+      if (numbers.test(value)) {
+        percent += point;
+      }
+
+      const oddChars = RegExp(/[\!\@\#\$\%\^\&\*\(\)\-\+\=\<\>\,\.]+/);
+      if (oddChars.test(value)) {
+        percent += point;
+      }
+
+      state.passwordComplexity = percent;
+      console.log(percent);
+    }
+
     this.setState(state);
   };
 
@@ -35,7 +89,8 @@ class FormSignUp extends Component {
       lastName,
       gender,
       birthday,
-      genderOptions
+      genderOptions,
+      passwordComplexity
     } = this.state;
 
     return (
@@ -63,6 +118,10 @@ class FormSignUp extends Component {
             onChange={e => this.onInputChange("password", e.target.value)}
             disabled={disable}
           />
+        </FormGroup>
+
+        <FormGroup>
+          <Progress value={passwordComplexity} />
         </FormGroup>
 
         <hr />
