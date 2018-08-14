@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Row } from "reactstrap";
 
 import Login from "../Login";
+import Register from "../Register";
 
 import "./style.css";
 
@@ -36,6 +37,8 @@ class Home extends Component {
           </div>
 
           <Login />
+
+          {/*<Register className="m-t-md" />*/}
         </div>
       </Row>
     );

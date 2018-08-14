@@ -7,8 +7,6 @@ import auth from "../../auth";
 import history from "../../history";
 import LoginForm from "../../components/_Forms/Login";
 
-import "./style.css";
-
 class Login extends Component {
   constructor() {
     super();
@@ -34,7 +32,7 @@ class Login extends Component {
           rsp.body.is_admin,
           rsp.body.token
         );
-        return history.push("/athletes");
+        return history.push(`/athletes/${rsp.body.id}`);
       } else {
         this.setState({ loginError: rsp.body.message });
       }
