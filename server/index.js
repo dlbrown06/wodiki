@@ -4,6 +4,11 @@ require("dotenv").config();
 
 const CONSTANTS = require("../config/constants");
 
+// Only include app monitoring on our prod instance
+if (CONSTANTS.APP.ENV === "production") {
+  require('newrelic');
+}
+
 // Require the framework and instantiate it
 const fastify = require("fastify")({
   logger: {
