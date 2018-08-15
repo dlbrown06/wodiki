@@ -96,9 +96,9 @@ module.exports = function(fastify, opts, next) {
     }
   });
 
-  /*fastify.route({
+  fastify.route({
     method: "GET",
-    url: "/wods/:athlete_id",
+    url: "/strength/:athlete_id",
     schema: {
       params: {
         athlete_id: { type: "string" }
@@ -115,22 +115,17 @@ module.exports = function(fastify, opts, next) {
         const { rows } = await db.query(
           `
           SELECT
-            wods.id,
-            wods.name,
-            wods.type,
-            wods.for_rounds,
-            wods.time_cap,
-            wods.created_by,
-            wods.created_on,
-            ws.reps total_reps,
-            ws.rounds total_rounds,
-            ws.total_time total_time,
-            count(*)
-            over () as total_records
-          FROM wods
-            INNER JOIN wod_scores ws ON ws.wod_id = wods.id
-          WHERE created_by = $1
-          ORDER BY created_on DESC
+            st.id,
+            st.name,
+            st.created_by,
+            st.created_on,
+            st.movement_id,
+            mv.name movement_name,
+            count(*) over () as total_records
+          FROM strength st
+            INNER JOIN movements mv on mv.id = st.movement_id
+          WHERE st.created_by = $1
+          ORDER BY st.created_on DESC
           LIMIT 50
         `,
           [athlete_id]
@@ -146,14 +141,14 @@ module.exports = function(fastify, opts, next) {
       } catch (err) {
         fastify.log.error(err);
         return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-          message: "Failed to Fetch WODs",
+          message: "Failed to Fetch Strength",
           error: err.toString()
         });
       } finally {
         db.release();
       }
     }
-  });*/
+  });
 
   next();
 };
