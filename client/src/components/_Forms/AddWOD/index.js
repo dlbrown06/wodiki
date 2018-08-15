@@ -11,6 +11,7 @@ import {
   Alert
 } from "reactstrap";
 import _ from "lodash";
+import moment from "moment/moment";
 
 class FormAddWOD extends Component {
   constructor() {
@@ -28,6 +29,7 @@ class FormAddWOD extends Component {
     };
 
     this.defaultState = {
+      wodDate: moment().format("YYYY-MM-DD"),
       name: "",
       type: "",
       timeCap: "",
@@ -79,6 +81,7 @@ class FormAddWOD extends Component {
     const { onSubmit } = this.props;
     const { state } = this;
 
+    state.wod_date = state.wodDate;
     const result = await onSubmit(state);
     if (result) {
       const state = _.cloneDeep(this.defaultState);
@@ -88,10 +91,27 @@ class FormAddWOD extends Component {
 
   render() {
     const { error, disable, availableMovements } = this.props;
-    const { name, type, forRounds, movements, score, timeCap } = this.state;
+    const {
+      name,
+      type,
+      forRounds,
+      movements,
+      score,
+      timeCap,
+      wodDate
+    } = this.state;
 
     return (
       <Form className="FormAddWOD">
+        <FormGroup>
+          <Label for="wodDate">Date</Label>
+          <Input
+            type="date"
+            value={wodDate}
+            onChange={e => this.onInputChange("wodDate", e.target.value)}
+            disabled={disable}
+          />
+        </FormGroup>
         <FormGroup>
           <Label for="wodName">WOD Name</Label>
           <Input

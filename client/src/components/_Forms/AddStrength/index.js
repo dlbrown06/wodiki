@@ -11,6 +11,7 @@ import {
   Alert
 } from "reactstrap";
 import _ from "lodash";
+import moment from "moment";
 
 class FormAddStrength extends Component {
   constructor() {
@@ -25,6 +26,7 @@ class FormAddStrength extends Component {
     };
 
     this.defaultState = {
+      strengthDate: moment().format("YYYY-MM-DD"),
       name: "",
       movement: { id: "", types: [] },
       sets: [_.cloneDeep(this.defaultSet)]
@@ -72,10 +74,20 @@ class FormAddStrength extends Component {
 
   render() {
     const { error, disable, availableMovements } = this.props;
-    const { name, sets, movement } = this.state;
+    const { name, sets, movement, strengthDate } = this.state;
 
     return (
       <Form className="FormAddStrength">
+        <FormGroup>
+          <Label for="strengthDate">Date</Label>
+          <Input
+            type="date"
+            value={strengthDate}
+            onChange={e => this.onInputChange("strengthDate", e.target.value)}
+            disabled={disable}
+          />
+        </FormGroup>
+
         <FormGroup>
           <Label for="wodName">Strength Name</Label>
           <Input

@@ -11,7 +11,9 @@ class StrengthLog extends Component {
     return (
       <div className="StrengthLog">
         <h2>
-          {moment(strength.created_on).format("ddd, M/DD")}
+          {moment(strength.strength_date || strength.created_on).format(
+            "ddd, M/DD"
+          )}
           {strength.name.length > 0 && ` - ${strength.name}`}
           <span className="pull-right text-muted">
             {strength.movement_name}
@@ -23,7 +25,7 @@ class StrengthLog extends Component {
 }
 
 StrengthLog.propTypes = {
-  wod: PropTypes.object.isRequired
+  strength: PropTypes.object.isRequired
 };
 
 StrengthLog.defaultProps = {};

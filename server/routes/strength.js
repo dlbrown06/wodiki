@@ -14,6 +14,7 @@ module.exports = function(fastify, opts, next) {
         type: "object",
         properties: {
           name: { type: "string" },
+          strength_date: { type: "string", format: "date" },
           movement_id: { type: "string" },
           sets: {
             type: "array",
@@ -41,7 +42,7 @@ module.exports = function(fastify, opts, next) {
     beforeHandler: (request, reply, done) =>
       auth.requireAthlete(fastify, request, reply, done),
     handler: async (request, reply) => {
-      const { name, movement_id, sets } = request.body;
+      const { name, movement_id, strength_date, sets } = request.body;
 
       try {
         const db = await fastify.pg.connect();
@@ -51,8 +52,8 @@ module.exports = function(fastify, opts, next) {
 
           // add the strength
           const { rows } = await db.query(
-            "INSERT INTO strength (id, movement_id, name, created_by) VALUES($1, $2, $3, $4) RETURNING id",
-            [uuid(), movement_id, name, request.athlete.id]
+            "INSERT INTO strength (id, movement_id, strength_date, name, created_by) VALUES($1, $2, $3, $4, $5) RETURNING id",
+            [uuid(), movement_id, strength_date, name, request.athlete.id]
           );
 
           const strengthId = rows[0].id;
@@ -120,12 +121,13 @@ module.exports = function(fastify, opts, next) {
             st.created_by,
             st.created_on,
             st.movement_id,
+            st.strength_date,
             mv.name movement_name,
             count(*) over () as total_records
           FROM strength st
             INNER JOIN movements mv on mv.id = st.movement_id
           WHERE st.created_by = $1
-          ORDER BY st.created_on DESC
+          ORDER BY st.strength_date DESC, st.created_on DESC
           LIMIT 50
         `,
           [athlete_id]

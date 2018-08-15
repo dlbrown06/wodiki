@@ -13,6 +13,7 @@ module.exports = function(fastify, opts, next) {
       body: {
         type: "object",
         properties: {
+          wod_date: { type: "string", format: "date" },
           name: { type: "string" },
           type: { type: "string" },
           forRounds: { type: ["number", "string"] },
@@ -58,7 +59,8 @@ module.exports = function(fastify, opts, next) {
         movements,
         score,
         timeCap,
-        timeCapSec
+        timeCapSec,
+        wod_date
       } = request.body;
 
       try {
@@ -69,9 +71,10 @@ module.exports = function(fastify, opts, next) {
 
           // add the wod
           const { rows } = await db.query(
-            "INSERT INTO wods (id, name, type, for_rounds, time_cap, created_by) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
+            "INSERT INTO wods (id, wod_date, name, type, for_rounds, time_cap, created_by) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id",
             [
               uuid(),
+              wod_date,
               name,
               type,
               forRounds === "" ? null : forRounds,
@@ -160,6 +163,7 @@ module.exports = function(fastify, opts, next) {
             wods.time_cap,
             wods.created_by,
             wods.created_on,
+            wods.wod_date,
             ws.reps total_reps,
             ws.rounds total_rounds,
             ws.total_time total_time,
@@ -168,7 +172,7 @@ module.exports = function(fastify, opts, next) {
           FROM wods
             INNER JOIN wod_scores ws ON ws.wod_id = wods.id
           WHERE created_by = $1
-          ORDER BY created_on DESC
+          ORDER BY wod_date DESC, created_on DESC
           LIMIT 50
         `,
           [athlete_id]

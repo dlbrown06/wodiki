@@ -108,6 +108,7 @@ class Athletes extends Component {
   onAddStrength = async strength => {
     try {
       this.setState({ addingStrengthError: "", addingStrength: true });
+      strength.strength_date = strength.strengthDate;
       await request
         .post("/api/strength")
         .set(...auth.tokenHeader())
