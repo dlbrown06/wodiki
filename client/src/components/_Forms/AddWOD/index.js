@@ -12,8 +12,6 @@ import {
 } from "reactstrap";
 import _ from "lodash";
 
-import "./style.css";
-
 class FormAddWOD extends Component {
   constructor() {
     super();
@@ -25,7 +23,8 @@ class FormAddWOD extends Component {
       reps: "",
       weight: "",
       distance: "",
-      height: ""
+      height: "",
+      calories: ""
     };
 
     this.defaultState = {
@@ -121,6 +120,7 @@ class FormAddWOD extends Component {
             </option>
             <option value="TIME">For Time</option>
             <option value="AMRAP">AMRAP</option>
+            <option value="EMOM">EMOM</option>
           </Input>
         </FormGroup>
 
@@ -162,6 +162,20 @@ class FormAddWOD extends Component {
               type="number"
               name="timeCap"
               placeholder="AMRAP Time (min)"
+              value={timeCap}
+              onChange={e => this.onInputChange("timeCap", e.target.value)}
+              disabled={disable}
+            />
+          </FormGroup>
+        )}
+
+        {type === "EMOM" && (
+          <FormGroup>
+            <Label for="timeCap">Time Cap</Label>
+            <Input
+              type="numeric"
+              name="timeCap"
+              placeholder="Time Cap (min)"
               value={timeCap}
               onChange={e => this.onInputChange("timeCap", e.target.value)}
               disabled={disable}

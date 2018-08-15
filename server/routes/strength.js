@@ -8,17 +8,14 @@ const auth = require("./middleware/auth");
 module.exports = function(fastify, opts, next) {
   fastify.route({
     method: "POST",
-    url: "/wods",
+    url: "/strength",
     schema: {
       body: {
         type: "object",
         properties: {
           name: { type: "string" },
-          type: { type: "string" },
-          forRounds: { type: ["number", "string"] },
-          timeCap: { type: ["number", "string"] },
-          timeCapSec: { type: ["number"] },
-          movements: {
+          movement_id: { type: "string" },
+          sets: {
             type: "array",
             items: [
               {
@@ -29,37 +26,22 @@ module.exports = function(fastify, opts, next) {
                   type: { type: "string" },
                   reps: { type: ["number", "string"] },
                   weight: { type: ["number", "string"] },
+                  distance: { type: ["number", "string"] },
+                  height: { type: ["number", "string"] },
                   calories: { type: ["number", "string"] }
                 }
               }
             ]
-          },
-          score: {
-            type: "object",
-            properties: {
-              reps: { type: ["number", "string"] },
-              rounds: { type: ["number", "string"] },
-              time: { type: "string" },
-              time_sec: { type: ["number", "string"] }
-            }
           }
         },
-        required: ["name", "type", "movements", "score"],
+        required: ["name", "movement_id", "sets"],
         additionalProperties: false
       }
     },
     beforeHandler: (request, reply, done) =>
       auth.requireAthlete(fastify, request, reply, done),
     handler: async (request, reply) => {
-      const {
-        name,
-        type,
-        forRounds,
-        movements,
-        score,
-        timeCap,
-        timeCapSec
-      } = request.body;
+      const { name, movement_id, sets } = request.body;
 
       try {
         const db = await fastify.pg.connect();
@@ -67,56 +49,36 @@ module.exports = function(fastify, opts, next) {
         try {
           await db.query("BEGIN");
 
-          // add the wod
+          // add the strength
           const { rows } = await db.query(
-            "INSERT INTO wods (id, name, type, for_rounds, time_cap, created_by) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
-            [
-              uuid(),
-              name,
-              type,
-              forRounds === "" ? null : forRounds,
-              timeCap === "" ? null : timeCapSec,
-              request.athlete.id
-            ]
+            "INSERT INTO strength (id, movement_id, name, created_by) VALUES($1, $2, $3, $4) RETURNING id",
+            [uuid(), movement_id, name, request.athlete.id]
           );
 
-          const wodId = rows[0].id;
+          const strengthId = rows[0].id;
 
           // add the moments
-          let movementNum = 0;
-          for (let movement of movements) {
-            movementNum++;
+          let setNum = 0;
+          for (let set of sets) {
+            setNum++;
             await db.query(
-              "INSERT INTO wod_movements (id, wod_id, movement_id, movement_number, weight, reps, height, distance, calories) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+              "INSERT INTO strength_sets (id, strength_id, set_number, weight, reps, height, distance, calories) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
               [
                 uuid(),
-                wodId,
-                movement.id,
-                movementNum,
-                movement.weight === "" ? null : movement.weight,
-                movement.reps === "" ? null : movement.reps,
-                movement.height === "" ? null : movement.height,
-                movement.distance === "" ? null : movement.distance,
-                movement.calories === "" ? null : movement.calories
+                strengthId,
+                setNum,
+                set.weight === "" ? null : set.weight,
+                set.reps === "" ? null : set.reps,
+                set.height === "" ? null : set.height,
+                set.distance === "" ? null : set.distance,
+                set.calories === "" ? null : set.calories
               ]
             );
           }
 
-          // add the score
-          await db.query(
-            "INSERT INTO wod_scores (id, wod_id, reps, rounds, total_time) VALUES($1, $2, $3, $4, $5)",
-            [
-              uuid(),
-              wodId,
-              score.reps === "" ? null : score.reps,
-              score.rounds === "" ? null : score.rounds,
-              score.time_sec === "" ? null : score.time_sec
-            ]
-          );
-
           await db.query("COMMIT");
           return reply.status(httpStatus.CREATED).send({
-            message: "WOD Created"
+            message: "Strength Created"
           });
         } catch (err) {
           await db.query("ROLLBACK");
@@ -127,14 +89,14 @@ module.exports = function(fastify, opts, next) {
       } catch (err) {
         fastify.log.error(err);
         return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-          message: "Failed to Create WOD",
+          message: "Failed to Create Strength",
           error: err.toString()
         });
       }
     }
   });
 
-  fastify.route({
+  /*fastify.route({
     method: "GET",
     url: "/wods/:athlete_id",
     schema: {
@@ -191,7 +153,7 @@ module.exports = function(fastify, opts, next) {
         db.release();
       }
     }
-  });
+  });*/
 
   next();
 };

@@ -11,6 +11,7 @@ import {
 import request from "superagent";
 
 import FormAddMovement from "../../components/_Forms/AddMovement";
+import FormAddStrength from "../../components/_Forms/AddStrength";
 import FormAddWOD from "../../components/_Forms/AddWOD";
 import WODLogs from "../../components/WODLogs";
 import auth from "../../auth";
@@ -33,7 +34,10 @@ class Athletes extends Component {
       addingWODError: "",
 
       addingMovement: false,
-      addingMovementError: ""
+      addingMovementError: "",
+
+      addingStrength: false,
+      addingStrengthError: ""
     };
   }
 
@@ -93,6 +97,25 @@ class Athletes extends Component {
     }
   };
 
+  onAddStrength = async strength => {
+    try {
+      this.setState({ addingStrengthError: "", addingStrength: true });
+      await request
+        .post("/api/strength")
+        .set(...auth.tokenHeader())
+        .send(strength);
+      this.setState({ addingStrength: false });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        addingStrengthError: `Failed to include new Strength Workout`,
+        addingStrength: false
+      });
+      return false;
+    }
+  };
+
   onFetchMovements = async () => {
     try {
       this.setState({ fetchingMovements: true });
@@ -134,7 +157,9 @@ class Athletes extends Component {
       movements,
       wods,
       addingWOD,
-      addingWODError
+      addingWODError,
+      addingStrength,
+      addingStrengthError
     } = this.state;
     return (
       <Container className="Athletes">
@@ -165,7 +190,19 @@ class Athletes extends Component {
               block
               onClick={() => this.setState({ addMovementModal: true })}
             >
-              Add Movement
+              Add New Movement
+            </Button>
+          </Col>
+        </Row>
+
+        <Row className="m-t-md">
+          <Col xs={12}>
+            <Button
+              color="info"
+              block
+              onClick={() => this.setState({ addStrengthModal: true })}
+            >
+              Add Strength
             </Button>
           </Col>
         </Row>
@@ -235,6 +272,31 @@ class Athletes extends Component {
                 onSubmit={this.onAddWOD}
                 error={addingWODError}
                 disable={addingWOD}
+              />
+            </ModalBody>
+          </Modal>
+
+          <Modal
+            isOpen={this.state.addStrengthModal}
+            toggle={() =>
+              this.setState({ addStrengthModal: !this.state.addStrengthModal })
+            }
+          >
+            <ModalHeader
+              toggle={() =>
+                this.setState({
+                  addStrengthModal: !this.state.addStrengthModal
+                })
+              }
+            >
+              Add Strength
+            </ModalHeader>
+            <ModalBody>
+              <FormAddStrength
+                availableMovements={movements}
+                onSubmit={this.onAddStrength}
+                error={addingStrengthError}
+                disable={addingStrength}
               />
             </ModalBody>
           </Modal>
