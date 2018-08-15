@@ -11,8 +11,12 @@ import {
 import request from "superagent";
 
 import FormAddMovement from "../../components/_Forms/AddMovement";
+import FormAddStrength from "../../components/_Forms/AddStrength";
 import FormAddWOD from "../../components/_Forms/AddWOD";
+
 import WODLogs from "../../components/WODLogs";
+import StrengthLogs from "../../components/StrengthLogs";
+
 import auth from "../../auth";
 import history from "../../history";
 
@@ -26,6 +30,9 @@ class Athletes extends Component {
       wods: [],
       fetchingWODs: false,
 
+      strength: [],
+      fetchingStrength: false,
+
       movements: [],
       fetchingMovements: false,
 
@@ -33,12 +40,17 @@ class Athletes extends Component {
       addingWODError: "",
 
       addingMovement: false,
-      addingMovementError: ""
+      addingMovementError: "",
+
+      addingStrength: false,
+      addingStrengthError: ""
     };
   }
 
   componentWillMount() {
-    return Promise.all[(this.onFetchMovements(), this.onFetchWODs())];
+    return Promise.all[
+      (this.onFetchMovements(), this.onFetchWODs(), this.onFetchStrength())
+    ];
   }
 
   onAddMovement = async (name, types) => {
@@ -93,6 +105,26 @@ class Athletes extends Component {
     }
   };
 
+  onAddStrength = async strength => {
+    try {
+      this.setState({ addingStrengthError: "", addingStrength: true });
+      strength.strength_date = strength.strengthDate;
+      await request
+        .post("/api/strength")
+        .set(...auth.tokenHeader())
+        .send(strength);
+      this.setState({ addingStrength: false });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        addingStrengthError: `Failed to include new Strength Workout`,
+        addingStrength: false
+      });
+      return false;
+    }
+  };
+
   onFetchMovements = async () => {
     try {
       this.setState({ fetchingMovements: true });
@@ -127,6 +159,23 @@ class Athletes extends Component {
     }
   };
 
+  onFetchStrength = async () => {
+    try {
+      this.setState({ fetchingStrength: true });
+      const rsp = await request
+        .get(`/api/strength/${auth.getId()}`)
+        .set(...auth.tokenHeader());
+      this.setState({ fetchingStrength: false, strength: rsp.body.results });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        fetchingStrength: false
+      });
+      return false;
+    }
+  };
+
   render() {
     const {
       addingMovement,
@@ -134,7 +183,10 @@ class Athletes extends Component {
       movements,
       wods,
       addingWOD,
-      addingWODError
+      addingWODError,
+      addingStrength,
+      addingStrengthError,
+      strength
     } = this.state;
     return (
       <Container className="Athletes">
@@ -165,7 +217,19 @@ class Athletes extends Component {
               block
               onClick={() => this.setState({ addMovementModal: true })}
             >
-              Add Movement
+              Add New Movement
+            </Button>
+          </Col>
+        </Row>
+
+        <Row className="m-t-md">
+          <Col xs={12}>
+            <Button
+              color="info"
+              block
+              onClick={() => this.setState({ addStrengthModal: true })}
+            >
+              Add Strength
             </Button>
           </Col>
         </Row>
@@ -183,8 +247,16 @@ class Athletes extends Component {
         </Row>
 
         <Row>
-          <Col xs={12}>
+          <Col xs={12} className="text-left m-t-md">
+            <h4>WOD Log</h4>
             <WODLogs wods={wods} />
+          </Col>
+        </Row>
+
+        <Row>
+          <Col xs={12} className="text-left m-t-md">
+            <h4>Strength Log</h4>
+            <StrengthLogs strength={strength} />
           </Col>
         </Row>
 
@@ -235,6 +307,31 @@ class Athletes extends Component {
                 onSubmit={this.onAddWOD}
                 error={addingWODError}
                 disable={addingWOD}
+              />
+            </ModalBody>
+          </Modal>
+
+          <Modal
+            isOpen={this.state.addStrengthModal}
+            toggle={() =>
+              this.setState({ addStrengthModal: !this.state.addStrengthModal })
+            }
+          >
+            <ModalHeader
+              toggle={() =>
+                this.setState({
+                  addStrengthModal: !this.state.addStrengthModal
+                })
+              }
+            >
+              Add Strength
+            </ModalHeader>
+            <ModalBody>
+              <FormAddStrength
+                availableMovements={movements}
+                onSubmit={this.onAddStrength}
+                error={addingStrengthError}
+                disable={addingStrength}
               />
             </ModalBody>
           </Modal>

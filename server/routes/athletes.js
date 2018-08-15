@@ -11,6 +11,9 @@ const CONSTANTS = require("../../config/constants");
 const { SYS_ACCT } = CONSTANTS;
 
 module.exports = function(fastify, opts, next) {
+  /**
+   * @name Login
+   */
   fastify.route({
     method: "POST",
     url: "/athletes/login",
@@ -106,15 +109,6 @@ module.exports = function(fastify, opts, next) {
 
         fastify.log.info(`Token Generated for email '${email}': ${token}`);
 
-        // save the token in a athlete sessions table
-        const now = new Date();
-        let expires = new Date();
-        expires.setTime(expires.getTime() + 7 * 24 * 60 * 60 * 1000); // in 7 days
-        await db.query(
-          "INSERT INTO athlete_sessions (id, athlete_id, created_on, expires_on) VALUES ($1, $2, $3, $4)",
-          [uuid(), athlete.id, new Date(), expires]
-        );
-
         // return the token
         payload.token = token;
         payload.message = "User Authenticated";
@@ -131,6 +125,9 @@ module.exports = function(fastify, opts, next) {
     }
   });
 
+  /**
+   * @name Register
+   */
   fastify.route({
     method: "POST",
     url: "/athletes/register",
@@ -236,6 +233,9 @@ module.exports = function(fastify, opts, next) {
     }
   });
 
+  /**
+   * @name VerifyEmail
+   */
   fastify.route({
     method: "GET",
     url: "/athletes/verify",

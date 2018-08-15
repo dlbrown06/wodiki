@@ -22,8 +22,6 @@ const requireAthlete = (fastify, request, reply, done) => {
       request.athlete = decoded;
       return done();
     });
-
-
   } catch (err) {
     request.log.error(err);
     return reply.status(httpStatus.FORBIDDEN).send({

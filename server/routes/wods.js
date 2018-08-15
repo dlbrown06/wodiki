@@ -13,6 +13,7 @@ module.exports = function(fastify, opts, next) {
       body: {
         type: "object",
         properties: {
+          wod_date: { type: "string", format: "date" },
           name: { type: "string" },
           type: { type: "string" },
           forRounds: { type: ["number", "string"] },
@@ -28,7 +29,8 @@ module.exports = function(fastify, opts, next) {
                   name: { type: "string" },
                   type: { type: "string" },
                   reps: { type: ["number", "string"] },
-                  weight: { type: ["number", "string"] }
+                  weight: { type: ["number", "string"] },
+                  calories: { type: ["number", "string"] }
                 }
               }
             ]
@@ -57,7 +59,8 @@ module.exports = function(fastify, opts, next) {
         movements,
         score,
         timeCap,
-        timeCapSec
+        timeCapSec,
+        wod_date
       } = request.body;
 
       try {
@@ -68,9 +71,10 @@ module.exports = function(fastify, opts, next) {
 
           // add the wod
           const { rows } = await db.query(
-            "INSERT INTO wods (id, name, type, for_rounds, time_cap, created_by) VALUES($1, $2, $3, $4, $5, $6) RETURNING id",
+            "INSERT INTO wods (id, wod_date, name, type, for_rounds, time_cap, created_by) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id",
             [
               uuid(),
+              wod_date,
               name,
               type,
               forRounds === "" ? null : forRounds,
@@ -82,17 +86,21 @@ module.exports = function(fastify, opts, next) {
           const wodId = rows[0].id;
 
           // add the moments
+          let movementNum = 0;
           for (let movement of movements) {
+            movementNum++;
             await db.query(
-              "INSERT INTO wod_movements (id, wod_id, movement_id, weight, reps, height, distance) VALUES($1, $2, $3, $4, $5, $6, $7)",
+              "INSERT INTO wod_movements (id, wod_id, movement_id, movement_number, weight, reps, height, distance, calories) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)",
               [
                 uuid(),
                 wodId,
                 movement.id,
+                movementNum,
                 movement.weight === "" ? null : movement.weight,
                 movement.reps === "" ? null : movement.reps,
                 movement.height === "" ? null : movement.height,
-                movement.distance === "" ? null : movement.distance
+                movement.distance === "" ? null : movement.distance,
+                movement.calories === "" ? null : movement.calories
               ]
             );
           }
@@ -155,6 +163,7 @@ module.exports = function(fastify, opts, next) {
             wods.time_cap,
             wods.created_by,
             wods.created_on,
+            wods.wod_date,
             ws.reps total_reps,
             ws.rounds total_rounds,
             ws.total_time total_time,
@@ -163,7 +172,7 @@ module.exports = function(fastify, opts, next) {
           FROM wods
             INNER JOIN wod_scores ws ON ws.wod_id = wods.id
           WHERE created_by = $1
-          ORDER BY created_on DESC
+          ORDER BY wod_date DESC, created_on DESC
           LIMIT 50
         `,
           [athlete_id]
