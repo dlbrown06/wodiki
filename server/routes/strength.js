@@ -1,6 +1,7 @@
 const httpStatus = require("http-status-codes");
 const _ = require("lodash");
 const uuid = require("uuid/v4");
+const moment = require("moment");
 
 const CONSTANTS = require("../../config/constants");
 const auth = require("./middleware/auth");
@@ -137,6 +138,12 @@ module.exports = function(fastify, opts, next) {
           count: rows.length ? rows[0].total_records : 0,
           results: rows.map(row => {
             delete row.total_records;
+            row.strength_date = row.strength_date
+              ? moment(row.strength_date)
+                  .utcOffset("+17:00")
+                  .format("YYYY-MM-DD HH:mm:ss")
+              : row.strength_date;
+            console.log(row.strength_date);
             return row;
           })
         });
