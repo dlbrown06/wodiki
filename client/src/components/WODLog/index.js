@@ -7,13 +7,12 @@ import "./style.css";
 class WODLog extends Component {
   render() {
     const { wod } = this.props;
-
     return (
       <div className="WODLog">
         <h2>
           {moment(wod.wod_date || wod.created_on).format("ddd, M/DD")}
           {wod.name.length > 0 && ` - ${wod.name}`}
-          <span className="pull-right text-muted">{wod.type}</span>
+          <span className="pull-right text-muted">{wod.type.abbr}</span>
         </h2>
       </div>
     );

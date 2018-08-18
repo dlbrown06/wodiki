@@ -7,16 +7,15 @@ import "./style.css";
 class StrengthLog extends Component {
   render() {
     const { strength } = this.props;
-
     return (
       <div className="StrengthLog">
         <h2>
           {moment(strength.strength_date || strength.created_on).format(
             "ddd, M/DD"
           )}
-          {strength.name.length > 0 && ` - ${strength.name}`}
+          {strength.name && ` - ${strength.name}`}
           <span className="pull-right text-muted">
-            {strength.movement_name}
+            {strength.movement.name}
           </span>
         </h2>
       </div>
