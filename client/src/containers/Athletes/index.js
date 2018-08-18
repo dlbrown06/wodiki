@@ -27,33 +27,50 @@ class Athletes extends Component {
     super();
 
     this.state = {
+      loading: true,
+      measurements: [],
       wods: [],
-      fetchingWODs: false,
-
       strength: [],
-      fetchingStrength: false,
-
       movements: [],
-      fetchingMovements: false,
 
       addingWOD: false,
       addingWODError: "",
-
       addingMovement: false,
       addingMovementError: "",
-
       addingStrength: false,
       addingStrengthError: ""
     };
   }
 
   componentWillMount() {
-    return Promise.all[
-      (this.onFetchMovements(), this.onFetchWODs(), this.onFetchStrength())
-    ];
+    return this.onFetchDashboard();
   }
 
-  onAddMovement = async (name, types) => {
+  onFetchDashboard = async () => {
+    try {
+      this.setState({ fetchingStrength: true });
+      const rsp = await request
+        .get(`/api/athletes/${auth.getId()}/dashboard`)
+        .set(...auth.tokenHeader());
+      const { measurements, wods, strength, movements } = rsp.body;
+      this.setState({
+        loading: false,
+        measurements,
+        wods,
+        strength,
+        movements
+      });
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.setState({
+        fetchingStrength: false
+      });
+      return false;
+    }
+  };
+
+  onAddMovement = async (name, measurements) => {
     try {
       this.setState({ addingMovementError: "", addingMovement: true });
       await request
@@ -61,9 +78,12 @@ class Athletes extends Component {
         .set(...auth.tokenHeader())
         .send({
           name,
-          types
+          measurements: measurements.map(item => item.name)
         });
-      this.setState({ addingMovement: false, addMovementModal: false });
+      this.setState(
+        { addingMovement: false, addMovementModal: false },
+        this.onFetchDashboard
+      );
       return true;
     } catch (err) {
       console.error(err);
@@ -125,73 +145,26 @@ class Athletes extends Component {
     }
   };
 
-  onFetchMovements = async () => {
-    try {
-      this.setState({ fetchingMovements: true });
-      const rsp = await request
-        .get("/api/movements")
-        .set(...auth.tokenHeader());
-      this.setState({ fetchingMovements: false, movements: rsp.body.results });
-      return true;
-    } catch (err) {
-      console.error(err);
-      this.setState({
-        fetchingMovements: false
-      });
-      return false;
-    }
-  };
-
-  onFetchWODs = async () => {
-    try {
-      this.setState({ fetchingWODs: true });
-      const rsp = await request
-        .get(`/api/wods/${auth.getId()}`)
-        .set(...auth.tokenHeader());
-      this.setState({ fetchingWODs: false, wods: rsp.body.results });
-      return true;
-    } catch (err) {
-      console.error(err);
-      this.setState({
-        fetchingWODs: false
-      });
-      return false;
-    }
-  };
-
-  onFetchStrength = async () => {
-    try {
-      this.setState({ fetchingStrength: true });
-      const rsp = await request
-        .get(`/api/strength/${auth.getId()}`)
-        .set(...auth.tokenHeader());
-      this.setState({ fetchingStrength: false, strength: rsp.body.results });
-      return true;
-    } catch (err) {
-      console.error(err);
-      this.setState({
-        fetchingStrength: false
-      });
-      return false;
-    }
-  };
-
   render() {
     const {
-      addingMovement,
-      addingMovementError,
+      loading,
+      measurements,
       movements,
       wods,
+      strength,
+
+      addingMovement,
+      addingMovementError,
       addingWOD,
       addingWODError,
       addingStrength,
-      addingStrengthError,
-      strength
+      addingStrengthError
     } = this.state;
     return (
       <Container className="Athletes">
-        <Row className="m-t-md">
+        <Row>
           <Col xs={12}>
+            {loading && <p>Include some update to UI when loading</p>}
             <div className="text-center">
               You are a member... you are awesome...
             </div>
@@ -280,6 +253,8 @@ class Athletes extends Component {
             <ModalBody>
               <FormAddMovement
                 onSubmit={this.onAddMovement}
+                movements={movements}
+                measurements={measurements}
                 error={addingMovementError}
                 disable={addingMovement}
               />

@@ -6,6 +6,7 @@ const SparkPost = require("sparkpost");
 
 const emailClient = new SparkPost();
 
+const auth = require("./middleware/auth");
 const CONSTANTS = require("../../config/constants");
 
 const { SYS_ACCT } = CONSTANTS;
@@ -299,6 +300,174 @@ module.exports = function(fastify, opts, next) {
         });
       } finally {
         db.release();
+      }
+    }
+  });
+
+  /**
+   * @name Dashboard
+   */
+  fastify.route({
+    method: "GET",
+    url: "/athletes/:athlete_id/dashboard",
+    schema: {
+      params: {
+        athlete_id: { type: "string" }
+      },
+      required: ["athlete_id"]
+    },
+    beforeHandler: (request, reply, done) =>
+      auth.requireAthlete(fastify, request, reply, done),
+    handler: async (request, reply) => {
+      try {
+        const { athlete_id } = request.params;
+        const db = await fastify.pg.connect();
+
+        try {
+          // get all the measurements and units etc
+          const measurements = [];
+          const { rows: measurementRows } = await db.query(
+            `
+              SELECT
+                m.id,
+                m.name,
+                m.abbr,
+                u.id unit_id,
+                u.name unit_name,
+                u.abbr unit_abbr,
+                u.is_metric unit_is_metric
+              FROM measurements m
+              LEFT JOIN measurement_units mu ON mu.measurement_id = m.id
+              LEFT JOIN units u ON u.id = mu.unit_id
+              ORDER BY m.name ASC
+            `
+          );
+
+          measurementRows.forEach(row => {
+            const found = measurements.find(item => item.name === row.name);
+            if (found) {
+              if (row.unit_id) {
+                found.units.push({
+                  id: row.unit_id,
+                  name: row.unit_name,
+                  abbr: row.unit_abbr,
+                  is_metric: row.unit_is_metric
+                });
+              }
+            } else {
+              const units = [];
+              if (row.unit_id) {
+                units.push({
+                  id: row.unit_id,
+                  name: row.unit_name,
+                  abbr: row.unit_abbr,
+                  is_metric: row.unit_is_metric
+                });
+              }
+              measurements.push({
+                id: row.id,
+                name: row.name,
+                abbr: row.abbr,
+                units
+              });
+            }
+          });
+
+          // get all the movements and their measurements etc
+          const movements = [];
+          let { rows: movementRows } = await db.query(
+            `
+              SELECT
+                m.id,
+                m.name,
+                mm.measurement_id,
+                m.created_on,
+                m.created_by
+              FROM movements m
+              INNER JOIN movement_measurements mm ON mm.movement_id = m.id
+              ORDER BY m.name ASC
+            `
+          );
+
+          movementRows.forEach(row => {
+            const found = movements.find(item => item.name === row.name);
+            if (found) {
+              found.measurements.push(
+                measurements.find(item => item.id === row.measurement_id)
+              );
+            } else {
+              movements.push({
+                id: row.id,
+                name: row.name,
+                measurements: [
+                  measurements.find(item => item.id === row.measurement_id)
+                ],
+                created_on: row.created_on,
+                created_by: row.created_by
+              });
+            }
+          });
+
+          // get all the wods, including their movements and selected measurements
+          const { rows: wods } = await db.query(
+            `
+              SELECT
+                wods.id,
+                wods.name,
+                wods.type,
+                wods.for_rounds,
+                wods.time_cap,
+                wods.created_by,
+                wods.created_on,
+                wods.wod_date,
+                ws.reps total_reps,
+                ws.rounds total_rounds,
+                ws.total_time total_time
+              FROM wods
+                INNER JOIN wod_scores ws ON ws.wod_id = wods.id
+              WHERE created_by = $1
+              ORDER BY wod_date DESC, created_on DESC
+              LIMIT 30
+            `,
+            [athlete_id]
+          );
+
+          // get all the strength, including their movements and selected measurements
+          const { rows: strength } = await db.query(
+            `
+              SELECT
+                st.id,
+                st.name,
+                st.created_by,
+                st.created_on,
+                st.movement_id,
+                st.strength_date,
+                mv.name movement_name
+              FROM strength st
+                INNER JOIN movements mv on mv.id = st.movement_id
+              WHERE st.created_by = $1
+              ORDER BY st.strength_date DESC, st.created_on DESC
+              LIMIT 30
+            `,
+            [athlete_id]
+          );
+
+          reply.send({
+            measurements,
+            movements,
+            wods,
+            strength
+          });
+        } catch (err) {
+          throw err;
+        } finally {
+          db.release();
+        }
+      } catch (err) {
+        fastify.log.error(err);
+        reply.internalServerError(
+          `Failed to Fetch Athlete Dashboard: ${err.toString()}`
+        );
       }
     }
   });

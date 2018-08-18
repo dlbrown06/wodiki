@@ -18,6 +18,7 @@ const fastify = require("fastify")({
 /**
  * Begin Registering Fastify Plugins
  */
+fastify.register(require("fastify-sensible"));
 
 fastify.register(require("fastify-static"), {
   root: path.join(
@@ -30,7 +31,8 @@ fastify.register(require("fastify-static"), {
 });
 
 fastify.register(require("fastify-postgres"), {
-  connectionString: CONSTANTS.APP.DB
+  connectionString: CONSTANTS.APP.DB,
+  ssl: { rejectUnauthorized: false }
 });
 
 fastify.register(require("fastify-jwt"), {
