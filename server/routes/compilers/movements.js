@@ -41,7 +41,7 @@ const fetchMovementResults = async db => {
       id: r.measurement_unit_id,
       name: r.measurement_unit_name,
       abbr: r.measurement_unit_abbr,
-      is_metric: r.measurement_unit_is_metric,
+      is_metric: r.measurement_unit_is_metric
     };
 
     if (!measurementFound) {

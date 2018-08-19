@@ -37,7 +37,7 @@ const fetchStrengthResultsByAthlete = async (db, athlete_id) => {
       INNER JOIN strength_set_results ssr ON ssr.strength_set_id = ss.id
       INNER JOIN measurements mm ON ssr.measurement_id = mm.id
       INNER JOIN units u ON u.id = ssr.unit_id
-      ORDER BY ss.order_num ASC
+      ORDER BY s.strength_date DESC, s.created_on DESC, ss.order_num ASC
     `,
     [athlete_id]
   );
@@ -60,9 +60,7 @@ const fetchStrengthResultsByAthlete = async (db, athlete_id) => {
     }
 
     // group the sets
-    let setFound = strengthFound.sets.find(
-      s => s.id === r.strength_set_id
-    );
+    let setFound = strengthFound.sets.find(s => s.id === r.strength_set_id);
     if (!setFound) {
       setFound = {
         id: r.strength_set_id,

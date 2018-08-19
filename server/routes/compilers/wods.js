@@ -51,7 +51,7 @@ const fetchWODResultsByAthlete = async (db, athlete_id) => {
       INNER JOIN wod_type_measurements wtm ON wtm.wod_type_id = wt.id
       INNER JOIN wod_type_measurement_results wtmr ON wtmr.wod_id = w.id AND wtmr.wod_type_measurement_id = wtm.id
       INNER  JOIN units u2 ON u2.id = wtmr.unit_id
-      ORDER BY wm.order_num ASC
+      ORDER BY w.wod_date DESC, w.created_on DESC, wm.order_num ASC
     `,
     [athlete_id]
   );

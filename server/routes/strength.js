@@ -23,20 +23,26 @@ module.exports = function(fastify, opts, next) {
               {
                 type: "object",
                 properties: {
-                  id: { type: "string" },
-                  name: { type: "string" },
-                  type: { type: "string" },
-                  reps: { type: ["number", "string"] },
-                  weight: { type: ["number", "string"] },
-                  distance: { type: ["number", "string"] },
-                  height: { type: ["number", "string"] },
-                  calories: { type: ["number", "string"] }
+                  set_number: { type: "integer" },
+                  measurements: {
+                    type: "array",
+                    items: [
+                      {
+                        type: "object",
+                        properties: {
+                          movement_id: { type: "string" },
+                          result: { type: "integer" },
+                          unit_id: { type: "string" }
+                        }
+                      }
+                    ]
+                  }
                 }
               }
             ]
           }
         },
-        required: ["name", "movement_id", "sets"],
+        required: ["name", "movement_id", "sets", "strength_date"],
         additionalProperties: false
       }
     },
@@ -59,23 +65,25 @@ module.exports = function(fastify, opts, next) {
 
           const strengthId = rows[0].id;
 
-          // add the moments
-          let setNum = 0;
           for (let set of sets) {
-            setNum++;
-            await db.query(
-              "INSERT INTO strength_sets (id, strength_id, set_number, weight, reps, height, distance, calories) VALUES($1, $2, $3, $4, $5, $6, $7, $8)",
-              [
-                uuid(),
-                strengthId,
-                setNum,
-                set.weight === "" ? null : set.weight,
-                set.reps === "" ? null : set.reps,
-                set.height === "" ? null : set.height,
-                set.distance === "" ? null : set.distance,
-                set.calories === "" ? null : set.calories
-              ]
+            const { rows: setRows } = await db.query(
+              "INSERT INTO strength_sets (id, strength_id, order_num) VALUES($1, $2, $3) RETURNING id",
+              [uuid(), strengthId, set.set_number]
             );
+
+            const setId = setRows[0].id;
+            for (let measurement of set.measurements) {
+              await db.query(
+                "INSERT INTO strength_set_results (id, strength_set_id, measurement_id, result, unit_id) VALUES($1, $2, $3, $4, $5)",
+                [
+                  uuid(),
+                  setId,
+                  measurement.measurement_id,
+                  measurement.result,
+                  measurement.unit_id
+                ]
+              );
+            }
           }
 
           await db.query("COMMIT");
@@ -84,16 +92,18 @@ module.exports = function(fastify, opts, next) {
           });
         } catch (err) {
           await db.query("ROLLBACK");
-          throw err;
+          fastify.log.error(err);
+          reply.internalServerError(
+            `Failed to Create Strength: ${err.toString()}`
+          );
         } finally {
           db.release();
         }
       } catch (err) {
         fastify.log.error(err);
-        return reply.status(httpStatus.INTERNAL_SERVER_ERROR).send({
-          message: "Failed to Create Strength",
-          error: err.toString()
-        });
+        reply.internalServerError(
+          `Failed to Begin to Create Strength: ${err.toString()}`
+        );
       }
     }
   });
