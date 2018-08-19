@@ -33,8 +33,6 @@ class Athletes extends Component {
       strength: [],
       movements: [],
 
-      addStrengthModal: true,
-
       addingWOD: false,
       addingWODError: "",
       addingMovement: false,
