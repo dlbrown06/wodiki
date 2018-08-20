@@ -180,7 +180,10 @@ class FormAddStrength extends Component {
               </Button>
             </Col>
             <Col xs={4} className="text-center">
-              <h3>{sets.length} Sets</h3>
+              <h3>
+                {sets.length} Set
+                {sets.length > 1 ? "s" : ""}
+              </h3>
             </Col>
             <Col xs={4}>
               <Button

@@ -10,7 +10,7 @@ const auth = require("./middleware/auth");
 const CONSTANTS = require("../../config/constants");
 const { fetchMeasurementResults } = require("./compilers/measurements");
 const { fetchMovementResults } = require("./compilers/movements");
-const { fetchWODResultsByAthlete } = require("./compilers/wods");
+const { fetchWODResultsByAthlete, fetchWODTypes } = require("./compilers/wods");
 const { fetchStrengthResultsByAthlete } = require("./compilers/strength");
 
 const { SYS_ACCT } = CONSTANTS;
@@ -334,6 +334,9 @@ module.exports = function(fastify, opts, next) {
           // get all the movements and their measurements etc
           const movements = await fetchMovementResults(db);
 
+          // get all the wod types
+          const wod_types = await fetchWODTypes(db);
+
           // get all the wods, including their movements and selected measurements
           const wods = await fetchWODResultsByAthlete(db, athlete_id);
 
@@ -343,6 +346,7 @@ module.exports = function(fastify, opts, next) {
           reply.send({
             measurements,
             movements,
+            wod_types,
             wods,
             strength
           });

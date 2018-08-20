@@ -140,4 +140,73 @@ const fetchWODResultsByAthlete = async (db, athlete_id) => {
   return wods;
 };
 
-module.exports = { fetchWODResultsByAthlete };
+const fetchWODTypes = async db => {
+  const { rows: typeRows } = await db.query(
+    `
+      SELECT
+        wt.id wod_type_id,
+        wt.name wod_type_name,
+        wt.abbr wod_type_abbr,
+        wtm.id wod_type_measurement_id,
+        m.id measurement_id,
+        m.name measurement_name,
+        m.abbr measurement_abbr,
+        u.id unit_id,
+        u.name unit_name,
+        u.abbr unit_abbr,
+        u.is_metric unit_is_metric
+      FROM wod_types wt
+      INNER JOIN wod_type_measurements wtm ON wtm.wod_type_id = wt.id
+      INNER JOIN measurements m ON m.id = wtm.measurement_id
+      INNER JOIN measurement_units mu ON mu.measurement_id = m.id
+      INNER JOIN units u ON u.id = mu.unit_id
+      ORDER BY wt.name ASC, wtm.order_num ASC, u.name ASC
+    `
+  );
+
+  const types = [];
+  typeRows.forEach(r => {
+    // group the types
+    let typeFound = types.find(t => t.id === r.wod_type_id);
+    if (!typeFound) {
+      typeFound = {
+        id: r.wod_type_id,
+        name: r.wod_type_name,
+        abbr: r.wod_type_abbr,
+        measurements: []
+      };
+      types.push(typeFound);
+    }
+
+    // group the measurements
+    let measurementFound = typeFound.measurements.find(
+      m => m.id === r.measurement_id
+    );
+    if (!measurementFound) {
+      measurementFound = {
+        wod_type_measurement_id: r.wod_type_measurement_id,
+        id: r.measurement_id,
+        name: r.measurement_name,
+        abbr: r.measurement_abbr,
+        units: []
+      };
+      typeFound.measurements.push(measurementFound);
+    }
+
+    // group the units
+    let unitFound = measurementFound.units.find(u => u.id === r.unit_id);
+    if (!unitFound) {
+      unitFound = {
+        id: r.unit_id,
+        name: r.unit_name,
+        abbr: r.unit_abbr,
+        is_metric: r.is_metric
+      };
+      measurementFound.units.push(unitFound);
+    }
+  });
+
+  return types;
+};
+
+module.exports = { fetchWODResultsByAthlete, fetchWODTypes };

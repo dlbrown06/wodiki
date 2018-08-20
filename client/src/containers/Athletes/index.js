@@ -6,7 +6,8 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
-  Button
+  Button,
+  ButtonGroup
 } from "reactstrap";
 import request from "superagent";
 
@@ -32,6 +33,7 @@ class Athletes extends Component {
       wods: [],
       strength: [],
       movements: [],
+      wod_types: [],
 
       addingWOD: false,
       addingWODError: "",
@@ -52,13 +54,14 @@ class Athletes extends Component {
       const rsp = await request
         .get(`/api/athletes/${auth.getId()}/dashboard`)
         .set(...auth.tokenHeader());
-      const { measurements, wods, strength, movements } = rsp.body;
+      const { measurements, wods, strength, movements, wod_types } = rsp.body;
       this.setState({
         loading: false,
         measurements,
         wods,
         strength,
-        movements
+        movements,
+        wod_types
       });
       return true;
     } catch (err) {
@@ -96,24 +99,16 @@ class Athletes extends Component {
   };
 
   onAddWOD = async wod => {
-    if (wod.score.time.length > 0) {
-      const timeSepIdx = wod.score.time.indexOf(":");
-      const min = parseInt(wod.score.time.substr(0, timeSepIdx), 10);
-      const sec = parseInt(wod.score.time.substr(timeSepIdx + 1), 10);
-      wod.score.time_sec = min * 60 + sec;
-    }
-
-    if (wod.timeCap.length > 0) {
-      wod.timeCapSec = parseInt(wod.timeCap, 10) * 60;
-    }
-
     try {
       this.setState({ addingWODError: "", addingWOD: true });
       await request
         .post("/api/wods")
         .set(...auth.tokenHeader())
         .send(wod);
-      this.setState({ addingWOD: false });
+      this.setState(
+        { addingWOD: false, addWODModal: false },
+        this.onFetchDashboard
+      );
       return true;
     } catch (err) {
       console.error(err);
@@ -133,7 +128,10 @@ class Athletes extends Component {
         .post("/api/strength")
         .set(...auth.tokenHeader())
         .send(strength);
-      this.setState({ addingStrength: false });
+      this.setState(
+        { addingStrength: false, addStrengthModal: false },
+        this.onFetchDashboard
+      );
       return true;
     } catch (err) {
       console.error(err);
@@ -152,6 +150,7 @@ class Athletes extends Component {
       movements,
       wods,
       strength,
+      wod_types,
 
       addingMovement,
       addingMovementError,
@@ -196,7 +195,7 @@ class Athletes extends Component {
         </Row>
 
         <Row className="m-t-md">
-          <Col xs={12}>
+          <Col xs={6}>
             <Button
               color="info"
               block
@@ -205,10 +204,7 @@ class Athletes extends Component {
               Add Strength
             </Button>
           </Col>
-        </Row>
-
-        <Row className="m-t-md">
-          <Col xs={12}>
+          <Col xs={6}>
             <Button
               color="info"
               block
@@ -280,6 +276,7 @@ class Athletes extends Component {
               <FormAddWOD
                 availableMovements={movements}
                 onSubmit={this.onAddWOD}
+                wodTypes={wod_types}
                 error={addingWODError}
                 disable={addingWOD}
               />
