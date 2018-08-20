@@ -1,16 +1,7 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import {
-  Row,
-  Col,
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  Button,
-  Alert,
-  ButtonGroup
-} from "reactstrap";
+import { Col, Form, FormGroup, Label, Input, Button, Alert } from "reactstrap";
+import _ from "lodash";
 
 import "./style.css";
 
@@ -20,8 +11,7 @@ class FormAddMovement extends Component {
 
     this.state = {
       name: "",
-      types: [],
-      movementTypes: ["REPS", "WEIGHT", "HEIGHT", "DISTANCE", "CALORIES"]
+      types: []
     };
   }
 
@@ -31,15 +21,15 @@ class FormAddMovement extends Component {
     this.setState(state);
   };
 
-  onMovementTypeClick = selected => {
-    const { types } = this.state;
-    const index = types.indexOf(selected);
-    if (index < 0) {
+  onMeasurementMethodClick = selected => {
+    let { types } = this.state;
+    let found = types.find(type => type.name === selected.name);
+    if (!found) {
       types.push(selected);
     } else {
-      types.splice(index, 1);
+      types = types.filter(type => type.name !== selected.name);
     }
-    this.setState({ types: [...types] });
+    this.setState({ types });
   };
 
   onSubmit = async e => {
@@ -54,8 +44,8 @@ class FormAddMovement extends Component {
   };
 
   render() {
-    const { error, disable } = this.props;
-    const { name, types, movementTypes } = this.state;
+    const { error, disable, movements, measurements } = this.props;
+    const { name, types } = this.state;
 
     return (
       <Form className="FormAddMovement">
@@ -77,21 +67,19 @@ class FormAddMovement extends Component {
         </FormGroup>
 
         <FormGroup>
-          <Label>Movement Types</Label>
-          <div className="text-center">
-            <ButtonGroup vertical>
-              {movementTypes.map((type, key) => (
-                <Button
-                  key={key}
-                  color={types.includes(type) ? "info" : "default"}
-                  onClick={() => this.onMovementTypeClick(type)}
-                  active={types.includes(type)}
-                >
-                  {type}
-                </Button>
-              ))}
-            </ButtonGroup>
-          </div>
+          <legend>Measurement Methods</legend>
+          {measurements.map((type, key) => (
+            <FormGroup check key={key}>
+              <Label check>
+                <Input
+                  type="checkbox"
+                  disabled={name === ""}
+                  onChange={() => this.onMeasurementMethodClick(type)}
+                />{" "}
+                {_.capitalize(type.name)}
+              </Label>
+            </FormGroup>
+          ))}
         </FormGroup>
 
         {error && (
@@ -103,7 +91,12 @@ class FormAddMovement extends Component {
         <Button
           block
           color="primary"
-          disabled={disable || name.length < 3 || types.length === 0}
+          disabled={
+            disable ||
+            name.length < 3 ||
+            types.length === 0 ||
+            movements.find(item => item.name === name) !== undefined
+          }
           onClick={this.onSubmit}
         >
           Add Movement
@@ -115,6 +108,8 @@ class FormAddMovement extends Component {
 
 FormAddMovement.propTypes = {
   onSubmit: PropTypes.func.isRequired,
+  movements: PropTypes.array.isRequired,
+  measurements: PropTypes.array.isRequired,
   error: PropTypes.string,
   disable: PropTypes.bool
 };

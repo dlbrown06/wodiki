@@ -6,7 +6,12 @@ const SparkPost = require("sparkpost");
 
 const emailClient = new SparkPost();
 
+const auth = require("./middleware/auth");
 const CONSTANTS = require("../../config/constants");
+const { fetchMeasurementResults } = require("./compilers/measurements");
+const { fetchMovementResults } = require("./compilers/movements");
+const { fetchWODResultsByAthlete, fetchWODTypes } = require("./compilers/wods");
+const { fetchStrengthResultsByAthlete } = require("./compilers/strength");
 
 const { SYS_ACCT } = CONSTANTS;
 
@@ -78,7 +83,7 @@ module.exports = function(fastify, opts, next) {
 
         const athlete = _.first(athletes);
 
-        const valid = new Promise((resolve, reject) => {
+        const valid = await new Promise((resolve, reject) => {
           bcrypt.compare(
             password,
             athlete.hash,
@@ -299,6 +304,65 @@ module.exports = function(fastify, opts, next) {
         });
       } finally {
         db.release();
+      }
+    }
+  });
+
+  /**
+   * @name Dashboard
+   */
+  fastify.route({
+    method: "GET",
+    url: "/athletes/:athlete_id/dashboard",
+    schema: {
+      params: {
+        athlete_id: { type: "string" }
+      },
+      required: ["athlete_id"]
+    },
+    beforeHandler: (request, reply, done) =>
+      auth.requireAthlete(fastify, request, reply, done),
+    handler: async (request, reply) => {
+      try {
+        const { athlete_id } = request.params;
+        const db = await fastify.pg.connect();
+
+        try {
+          // get all the measurements and units etc
+          const measurements = await fetchMeasurementResults(db);
+
+          // get all the movements and their measurements etc
+          const movements = await fetchMovementResults(db);
+
+          // get all the wod types
+          const wod_types = await fetchWODTypes(db);
+
+          // get all the wods, including their movements and selected measurements
+          const wods = await fetchWODResultsByAthlete(db, athlete_id);
+
+          // get all the strength, including their movements and selected measurements
+          const strength = await fetchStrengthResultsByAthlete(db, athlete_id);
+
+          reply.send({
+            measurements,
+            movements,
+            wod_types,
+            wods,
+            strength
+          });
+        } catch (err) {
+          fastify.log.error(err);
+          reply.internalServerError(
+            `Failed to Fetch Athlete Dashboard: ${err.toString()}`
+          );
+        } finally {
+          db.release();
+        }
+      } catch (err) {
+        fastify.log.error(err);
+        reply.internalServerError(
+          `Failed to Begin to Fetch Athlete Dashboard: ${err.toString()}`
+        );
       }
     }
   });

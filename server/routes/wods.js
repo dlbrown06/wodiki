@@ -14,12 +14,10 @@ module.exports = function(fastify, opts, next) {
       body: {
         type: "object",
         properties: {
-          wod_date: { type: "string", format: "date" },
           name: { type: "string" },
-          type: { type: "string" },
-          forRounds: { type: ["number", "string"] },
-          timeCap: { type: ["number", "string"] },
-          timeCapSec: { type: ["number"] },
+          as_prescribed: { type: "boolean" },
+          is_record: { type: "boolean" },
+          wod_date: { type: "string", format: "date" },
           movements: {
             type: "array",
             items: [
@@ -28,25 +26,60 @@ module.exports = function(fastify, opts, next) {
                 properties: {
                   id: { type: "string" },
                   name: { type: "string" },
-                  type: { type: "string" },
-                  reps: { type: ["number", "string"] },
-                  weight: { type: ["number", "string"] },
-                  calories: { type: ["number", "string"] }
+                  measurements: {
+                    type: "array",
+                    items: [
+                      {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          name: { type: "string" },
+                          abbr: { type: "string" },
+                          result: { type: "integer" },
+                          unit_id: { type: "string" },
+                          units: {
+                            type: "array",
+                            items: [
+                              {
+                                type: "object",
+                                properties: {
+                                  id: { type: "string" },
+                                  name: { type: "string" },
+                                  abbr: { type: "string" },
+                                  is_metric: { type: "boolean" }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 }
               }
             ]
           },
-          score: {
+          results: {
+            type: "array",
+            items: [
+              {
+                type: "object",
+                parameters: {
+                  measurement_id: { type: "string" },
+                  unit_id: { type: "string" },
+                  result: { type: "integer" }
+                }
+              }
+            ]
+          },
+          wod_type: {
             type: "object",
-            properties: {
-              reps: { type: ["number", "string"] },
-              rounds: { type: ["number", "string"] },
-              time: { type: "string" },
-              time_sec: { type: ["number", "string"] }
+            parameters: {
+              id: { type: "string" }
             }
           }
         },
-        required: ["name", "type", "movements", "score"],
+        required: ["name", "wod_type", "movements", "results", "wod_date"],
         additionalProperties: false
       }
     },
@@ -55,13 +88,12 @@ module.exports = function(fastify, opts, next) {
     handler: async (request, reply) => {
       const {
         name,
-        type,
-        forRounds,
+        as_prescribed,
+        is_record,
+        wod_date,
         movements,
-        score,
-        timeCap,
-        timeCapSec,
-        wod_date
+        results,
+        wod_type
       } = request.body;
 
       try {
@@ -72,14 +104,14 @@ module.exports = function(fastify, opts, next) {
 
           // add the wod
           const { rows } = await db.query(
-            "INSERT INTO wods (id, wod_date, name, type, for_rounds, time_cap, created_by) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+            "INSERT INTO wods (id, wod_date, name, wod_type_id, as_prescribed, is_record, created_by) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id",
             [
               uuid(),
               wod_date,
               name,
-              type,
-              forRounds === "" ? null : forRounds,
-              timeCap === "" ? null : timeCapSec,
+              wod_type.id,
+              as_prescribed,
+              is_record,
               request.athlete.id
             ]
           );
@@ -90,33 +122,40 @@ module.exports = function(fastify, opts, next) {
           let movementNum = 0;
           for (let movement of movements) {
             movementNum++;
-            await db.query(
-              "INSERT INTO wod_movements (id, wod_id, movement_id, movement_number, weight, reps, height, distance, calories) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-              [
-                uuid(),
-                wodId,
-                movement.id,
-                movementNum,
-                movement.weight === "" ? null : movement.weight,
-                movement.reps === "" ? null : movement.reps,
-                movement.height === "" ? null : movement.height,
-                movement.distance === "" ? null : movement.distance,
-                movement.calories === "" ? null : movement.calories
-              ]
+            const { rows: wodMovmentRows } = await db.query(
+              "INSERT INTO wod_movements (id, wod_id, movement_id, order_num) VALUES($1, $2, $3, $4) RETURNING id",
+              [uuid(), wodId, movement.id, movementNum]
             );
+
+            const wodMovementId = wodMovmentRows[0].id;
+
+            for (let measurement of movement.measurements) {
+              await db.query(
+                "INSERT INTO wod_movement_results (id, wod_movement_id, measurement_id, result, unit_id) VALUES($1, $2, $3, $4, $5)",
+                [
+                  uuid(),
+                  wodMovementId,
+                  measurement.id,
+                  measurement.result,
+                  measurement.unit_id
+                ]
+              );
+            }
           }
 
           // add the score
-          await db.query(
-            "INSERT INTO wod_scores (id, wod_id, reps, rounds, total_time) VALUES($1, $2, $3, $4, $5)",
-            [
-              uuid(),
-              wodId,
-              score.reps === "" ? null : score.reps,
-              score.rounds === "" ? null : score.rounds,
-              score.time_sec === "" ? null : score.time_sec
-            ]
-          );
+          for (let result of results) {
+            await db.query(
+              "INSERT INTO wod_type_measurement_results (id, wod_id, result, wod_type_measurement_id, unit_id) VALUES($1, $2, $3, $4, $5)",
+              [
+                uuid(),
+                wodId,
+                result.result,
+                result.measurement_id,
+                result.unit_id
+              ]
+            );
+          }
 
           await db.query("COMMIT");
           return reply.status(httpStatus.CREATED).send({

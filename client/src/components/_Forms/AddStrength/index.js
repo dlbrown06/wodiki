@@ -17,19 +17,11 @@ class FormAddStrength extends Component {
   constructor() {
     super();
 
-    this.defaultSet = {
-      reps: "",
-      weight: "",
-      distance: "",
-      height: "",
-      calories: ""
-    };
-
     this.defaultState = {
       strengthDate: moment().format("YYYY-MM-DD"),
       name: "",
-      movement: { id: "", types: [] },
-      sets: [_.cloneDeep(this.defaultSet)]
+      movement: { id: "", measurements: [] },
+      sets: []
     };
 
     this.state = _.cloneDeep(this.defaultState);
@@ -43,21 +35,57 @@ class FormAddStrength extends Component {
 
   onMovementChange = value => {
     const { availableMovements } = this.props;
-    this.setState({
-      movement: availableMovements.find(item => item.id === value)
-    });
+    const movement = availableMovements.find(item => item.id === value);
+    this.setState({ movement }, () => this.addSet());
+  };
+
+  onMeasurementChange = (setKey, measurement_id, result, unit_id) => {
+    const { sets } = this.state;
+
+    const existingSet = sets[setKey];
+    if (existingSet) {
+      let found = existingSet.measurements.find(
+        m => m.measurement_id === measurement_id
+      );
+      if (found) {
+        if (result !== null) {
+          found.result = result;
+        }
+        if (unit_id !== null) {
+          found.unit_id = unit_id;
+        }
+      } else {
+        existingSet.measurements.push({ measurement_id, result, unit_id });
+      }
+    } else {
+      sets[setKey] = {
+        set_number: setKey + 1,
+        measurements: [{ measurement_id, result, unit_id }]
+      };
+    }
+
+    this.setState({ sets });
   };
 
   addSet = () => {
-    const { sets } = this.state;
-    sets.push(_.cloneDeep(this.defaultState));
+    const { sets, movement } = this.state;
+    sets.push({
+      set_number: sets.length + 1,
+      measurements: movement.measurements.map(m => ({
+        measurement_id: m.id,
+        result: null,
+        unit_id: m.units.length === 1 ? m.units[0].id : null
+      }))
+    });
     this.setState({ sets });
   };
 
   removeSet = () => {
     const { sets } = this.state;
-    sets.pop();
-    this.setState({ sets });
+    if (sets.length > 1) {
+      sets.pop();
+      this.setState({ sets });
+    }
   };
 
   onSubmit = async () => {
@@ -70,6 +98,26 @@ class FormAddStrength extends Component {
       const state = _.cloneDeep(this.defaultState);
       this.setState(state);
     }
+  };
+
+  disableSubmit = () => {
+    const { disable } = this.props;
+    const { sets, movement } = this.state;
+
+    if (disable) return true;
+
+    if (!movement.id || movement.id === "") return true;
+
+    // ensure all set data is completed
+    const incompleteSet = sets.find(set => {
+      if (!set.measurements.length) return true;
+
+      const measurements = set.measurements.filter(
+        m => !m.measurement_id || !m.result || !m.unit_id
+      );
+      return measurements.length > 0;
+    });
+    return incompleteSet !== undefined;
   };
 
   render() {
@@ -108,7 +156,6 @@ class FormAddStrength extends Component {
             onChange={e => this.onMovementChange(e.target.value)}
             disabled={disable}
             value={movement.id}
-            bsSize="sm"
           >
             <option disabled value={""}>
               Select Movement
@@ -121,34 +168,103 @@ class FormAddStrength extends Component {
           </Input>
         </FormGroup>
 
+        {movement.id !== "" && (
+          <Row>
+            <Col xs={4}>
+              <Button
+                block
+                disabled={disable || movement.id === ""}
+                onClick={() => this.addSet()}
+              >
+                +
+              </Button>
+            </Col>
+            <Col xs={4} className="text-center">
+              <h3>
+                {sets.length} Set
+                {sets.length > 1 ? "s" : ""}
+              </h3>
+            </Col>
+            <Col xs={4}>
+              <Button
+                block
+                disabled={disable || movement.id === "" || sets.length < 2}
+                onClick={() => this.removeSet()}
+              >
+                -
+              </Button>
+            </Col>
+          </Row>
+        )}
+
         {movement.id !== "" &&
           sets.length > 0 && (
             <div>
               <hr />
-              <h5>{sets.length} Sets</h5>
-              {sets.map((set, key) => (
-                <div key={key}>
+              {sets.map((set, setKey) => (
+                <div key={setKey}>
                   <Row>
-                    {movement.types.map((type, typeKey) => (
-                      <Col xs={6} key={typeKey}>
-                        <FormGroup>
-                          <Label>{_.startCase(type.toLowerCase())}</Label>
-                          <Input
-                            type="number"
-                            placeholder={`Enter ${_.startCase(
-                              type.toLowerCase()
-                            )}`}
-                            // value={set[type.toLowerCase()]}
-                            bsSize="sm"
-                            onChange={e => {
-                              set[type.toLowerCase()] = e.target.value;
-                              this.setState({ sets });
-                            }}
-                            disabled={disable || movement.id.length === 0}
-                          />
-                        </FormGroup>
-                      </Col>
-                    ))}
+                    <Col xs={1}>{setKey + 1}.</Col>
+                    <Col xs={10}>
+                      {movement.measurements.map((measurement, typeKey) => (
+                        <Row key={typeKey}>
+                          <Col xs={8}>
+                            <FormGroup>
+                              <Label hidden>
+                                {_.startCase(measurement.name.toLowerCase())}
+                              </Label>
+                              <Input
+                                type="number"
+                                placeholder={`${_.startCase(
+                                  measurement.name.toLowerCase()
+                                )}`}
+                                bsSize="sm"
+                                onChange={e => {
+                                  this.onMeasurementChange(
+                                    setKey,
+                                    measurement.id,
+                                    e.target.value,
+                                    measurement.units.length === 1
+                                      ? _.first(measurement.units).id
+                                      : null
+                                  );
+                                }}
+                                disabled={disable || movement.id.length === 0}
+                              />
+                            </FormGroup>
+                          </Col>
+                          <Col xs={4}>
+                            <FormGroup>
+                              <Input
+                                type="select"
+                                name="units"
+                                onChange={e => {
+                                  this.onMeasurementChange(
+                                    setKey,
+                                    measurement.id,
+                                    null,
+                                    e.target.value
+                                  );
+                                }}
+                                disabled={
+                                  disable || measurement.units.length === 1
+                                }
+                                bsSize="sm"
+                              >
+                                {measurement.units.length > 1 && (
+                                  <option value={""}>Unit</option>
+                                )}
+                                {measurement.units.map((option, optKey) => (
+                                  <option value={option.id} key={optKey}>
+                                    {option.abbr}
+                                  </option>
+                                ))}
+                              </Input>
+                            </FormGroup>
+                          </Col>
+                        </Row>
+                      ))}
+                    </Col>
                   </Row>
                 </div>
               ))}
@@ -159,33 +275,12 @@ class FormAddStrength extends Component {
           <hr />
           {error && <Alert color="danger">{error}</Alert>}
           <Row>
-            <Col xs={6}>
-              <Row>
-                <Col xs={6}>
-                  <Button
-                    block
-                    disabled={disable || movement.id === ""}
-                    onClick={() => this.addSet()}
-                  >
-                    +
-                  </Button>
-                </Col>
-                <Col xs={6}>
-                  <Button
-                    block
-                    disabled={disable || movement.id === ""}
-                    onClick={() => this.removeSet()}
-                  >
-                    -
-                  </Button>
-                </Col>
-              </Row>
-            </Col>
+            <Col xs={6} />
             <Col xs={6}>
               <Button
                 block
                 color="primary"
-                disabled={disable || _.isEmpty(movement) || sets.length === 0}
+                disabled={this.disableSubmit()}
                 onClick={() => this.onSubmit()}
               >
                 Save Strength
