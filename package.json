@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "server/index.js",
-  "author": "Doug Brown",
-  "license": "ISC",
-  "homepage": "https://wodiki.com",
+  "author": "Doug Brown <dlbrown06@gmail.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dlbrown06/wodiki.git"
