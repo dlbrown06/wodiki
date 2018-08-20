@@ -4,6 +4,10 @@
   "description": "",
   "main": "server/index.js",
   "author": "Doug Brown <dlbrown06@gmail.com>",
+  "engines": {
+    "node": "8.11.4",
+    "npm": "5.6.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dlbrown06/wodiki.git"
@@ -131,6 +135,7 @@
     "watch-css": "npm run build-css && node-sass-chokidar client/src/ -o client/src/ --watch --recursive",
     "start-client": "npm-run-all -p watch-css start-js",
     "start-server": "node $NODE_DEBUG_OPTION server",
-    "deploy": "npm run build && node server"
+    "deploy": "node server",
+    "postinstall": "npm run build"
   }
 }
