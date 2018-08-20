@@ -83,7 +83,7 @@ module.exports = function(fastify, opts, next) {
 
         const athlete = _.first(athletes);
 
-        const valid = new Promise((resolve, reject) => {
+        const valid = await new Promise((resolve, reject) => {
           bcrypt.compare(
             password,
             athlete.hash,
