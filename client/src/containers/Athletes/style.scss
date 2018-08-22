@@ -1,1 +1,31 @@
-.Athletes {}
+.Athletes {
+
+  .loading-overlay {
+    position: fixed;
+    z-index: 10;
+    height: 100%;
+    background-color: #fbfbfb;
+    width: 100%;
+    top: 0;
+    color: #9c9c9c;
+    font-size: 30px;
+    padding: 79% 33%;
+    opacity: 1;
+
+    &.hide {
+      opacity: 0;
+      z-index: -1;
+      transition: all 0.25s linear;
+    }
+  }
+
+  .react-calendar {
+    border-radius: 5px;
+    box-shadow: 1px 1px 1px 1px #00000005;
+    border-color: #00000014;
+
+    .worked {
+      background-color: #c8e4ff;
+    }
+  }
+}
