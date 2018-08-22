@@ -6,17 +6,17 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
-  Button,
-  ButtonGroup
+  Button
 } from "reactstrap";
 import request from "superagent";
+import Calendar from "react-calendar";
+import moment from "moment";
 
 import FormAddMovement from "../../components/_Forms/AddMovement";
 import FormAddStrength from "../../components/_Forms/AddStrength";
 import FormAddWOD from "../../components/_Forms/AddWOD";
 
-import WODLogs from "../../components/WODLogs";
-import StrengthLogs from "../../components/StrengthLogs";
+import Workouts from "../../components/Workouts";
 
 import auth from "../../auth";
 import history from "../../history";
@@ -34,6 +34,8 @@ class Athletes extends Component {
       strength: [],
       movements: [],
       wod_types: [],
+      viewWorkoutDate: moment().format("YYYY-MM-DD"),
+      today: moment().format("YYYY-MM-DD"),
 
       addingWOD: false,
       addingWODError: "",
@@ -50,7 +52,7 @@ class Athletes extends Component {
 
   onFetchDashboard = async () => {
     try {
-      this.setState({ fetchingStrength: true });
+      this.setState({ loading: true });
       const rsp = await request
         .get(`/api/athletes/${auth.getId()}/dashboard`)
         .set(...auth.tokenHeader());
@@ -67,7 +69,7 @@ class Athletes extends Component {
     } catch (err) {
       console.error(err);
       this.setState({
-        fetchingStrength: false
+        loading: false
       });
       return false;
     }
@@ -151,6 +153,8 @@ class Athletes extends Component {
       wods,
       strength,
       wod_types,
+      viewWorkoutDate,
+      today,
 
       addingMovement,
       addingMovementError,
@@ -161,73 +165,110 @@ class Athletes extends Component {
     } = this.state;
     return (
       <Container className="Athletes">
-        <Row>
-          <Col xs={12}>
-            {loading && <p>Include some update to UI when loading</p>}
-            <div className="text-center">
-              You are a member... you are awesome...
-            </div>
-            <div>
-              <span
-                className="link"
-                onClick={() => {
-                  auth.logout();
-                  history.push("/");
-                }}
+        <div className={`loading-overlay ${loading ? "show" : "hide"}`}>
+          Loading
+        </div>
+        <div>
+          <Row>
+            <Col xs={12}>
+              <div className="text-center">
+                You are a member... you are awesome...
+              </div>
+              <div className="text-center">
+                <span
+                  className="link"
+                  onClick={() => {
+                    auth.logout();
+                    history.push("/");
+                  }}
+                >
+                  now logout
+                </span>
+                ...
+              </div>
+            </Col>
+          </Row>
+
+          <Row className="m-t-md">
+            <Col xs={12}>
+              <Button
+                color="info"
+                block
+                onClick={() => this.setState({ addMovementModal: true })}
+                disabled={loading}
               >
-                now logout
-              </span>
-              ...
-            </div>
-          </Col>
-        </Row>
+                Add New Movement
+              </Button>
+            </Col>
+          </Row>
 
-        <Row className="m-t-md">
-          <Col xs={12}>
-            <Button
-              color="info"
-              block
-              onClick={() => this.setState({ addMovementModal: true })}
-            >
-              Add New Movement
-            </Button>
-          </Col>
-        </Row>
+          <Row className="m-t-md">
+            <Col xs={6}>
+              <Button
+                color="info"
+                block
+                onClick={() => this.setState({ addStrengthModal: true })}
+                disabled={loading}
+              >
+                Add Strength
+              </Button>
+            </Col>
+            <Col xs={6}>
+              <Button
+                color="info"
+                block
+                onClick={() => this.setState({ addWODModal: true })}
+                disabled={loading}
+              >
+                Add WOD
+              </Button>
+            </Col>
+          </Row>
 
-        <Row className="m-t-md">
-          <Col xs={6}>
-            <Button
-              color="info"
-              block
-              onClick={() => this.setState({ addStrengthModal: true })}
-            >
-              Add Strength
-            </Button>
-          </Col>
-          <Col xs={6}>
-            <Button
-              color="info"
-              block
-              onClick={() => this.setState({ addWODModal: true })}
-            >
-              Add WOD
-            </Button>
-          </Col>
-        </Row>
+          <Row className="mt-4">
+            <Col>
+              <h4>Workout Calendar</h4>
+              <Calendar
+                onChange={e =>
+                  this.setState({
+                    viewWorkoutDate: moment(e).format("YYYY-MM-DD")
+                  })
+                }
+                value={new Date()}
+                tileClassName={({ date, view }) => {
+                  if (view === "month") {
+                    const day = moment(date).format("YYYY-MM-DD");
+                    const foundWOD = wods.find(w => w.wod_date === day);
+                    const foundStrength = strength.find(
+                      s => s.strength_date === day
+                    );
 
-        <Row>
-          <Col xs={12} className="text-left m-t-md">
-            <h4>WOD Log</h4>
-            <WODLogs wods={wods} />
-          </Col>
-        </Row>
+                    return foundWOD || foundStrength ? "worked" : null;
+                  }
 
-        <Row>
-          <Col xs={12} className="text-left m-t-md">
-            <h4>Strength Log</h4>
-            <StrengthLogs strength={strength} />
-          </Col>
-        </Row>
+                  return null;
+                }}
+              />
+            </Col>
+          </Row>
+
+          <Row className="mt-4">
+            <Col>
+              <h4>
+                Viewing{" "}
+                {today === viewWorkoutDate
+                  ? " Today"
+                  : moment(viewWorkoutDate).format("MMM Do")}
+              </h4>
+              <Workouts
+                wods={wods.filter(w => w.wod_date === viewWorkoutDate)}
+                strength={strength.filter(
+                  s => s.strength_date === viewWorkoutDate
+                )}
+              />
+            </Col>
+          </Row>
+        </div>
 
         {/*Modals*/}
         <section>

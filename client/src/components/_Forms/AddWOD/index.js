@@ -39,8 +39,6 @@ class FormAddWOD extends Component {
     const wod_type = wodTypes.find(wt => wt.id === wodTypeId);
     this.setState(
       {
-        as_prescribed: false,
-        is_record: false,
         movements: [],
         results: wod_type
           ? wod_type.measurements.map(m => ({
@@ -76,7 +74,8 @@ class FormAddWOD extends Component {
     const { movements } = this.state;
     const { availableMovements } = this.props;
 
-    movements[key] = availableMovements.find(item => item.id === value);
+    const foundMovement = availableMovements.find(item => item.id === value);
+    movements[key] = _.cloneDeep(foundMovement);
 
     // set the unit id of measurements if it is the only one
     movements[key].measurements.forEach(mm => {
@@ -148,7 +147,15 @@ class FormAddWOD extends Component {
 
   render() {
     const { error, disable, availableMovements, wodTypes } = this.props;
-    const { wod_date, name, wod_type, movements, results } = this.state;
+    const {
+      wod_date,
+      name,
+      wod_type,
+      movements,
+      results,
+      is_record,
+      as_prescribed
+    } = this.state;
 
     return (
       <Form className="FormAddWOD">
@@ -171,6 +178,28 @@ class FormAddWOD extends Component {
             onChange={e => this.onInputChange("name", e.target.value)}
             disabled={disable}
           />
+        </FormGroup>
+        <FormGroup>
+          <Row>
+            <Col xs={6}>
+              <Button
+                block
+                onClick={() => this.setState({ is_record: !is_record })}
+                color={is_record ? "info" : "default"}
+              >
+                PR
+              </Button>
+            </Col>
+            <Col xs={6}>
+              <Button
+                block
+                onClick={() => this.setState({ as_prescribed: !as_prescribed })}
+                color={as_prescribed ? "info" : "default"}
+              >
+                RX
+              </Button>
+            </Col>
+          </Row>
         </FormGroup>
         <FormGroup>
           <Label for="scoreType">
