@@ -1,14 +1,14 @@
+const Cookie = require("js-cookie");
 const app = "wodiki-user";
 
 const Auth = {
   isLoggedIn() {
-    const app = localStorage.getItem(app);
+    const app = Cookie.getJSON(app);
     if (app === null) {
       return false;
     }
 
-    const appObj = JSON.parse(app);
-    return appObj.email && appObj.token;
+    return app.email && app.token;
   },
 
   passIfLoggedIn: (nextState, replace) => {
@@ -49,40 +49,44 @@ const Auth = {
   },
 
   login: (id, email, is_admin, token) => {
-    localStorage[app] = JSON.stringify({
-      id,
-      email,
-      is_admin,
-      token
-    });
+    Cookie.set(
+      app,
+      {
+        id,
+        email,
+        is_admin,
+        token
+      },
+      { expires: 7 }
+    );
   },
 
   logout: () => {
-    localStorage.removeItem(app);
+    Cookie.remove(app);
   },
 
   getToken() {
-    const user = localStorage.getItem(app);
+    const user = Cookie.getJSON(app);
     if (user === null) {
       return {};
     }
-    return JSON.parse(user).token;
+    return user.token;
   },
 
   getEmail() {
-    const user = localStorage.getItem(app);
+    const user = Cookie.getJSON(app);
     if (user === null) {
       return {};
     }
-    return JSON.parse(user).email;
+    return user.email;
   },
 
   getId() {
-    const user = localStorage.getItem(app);
+    const user = Cookie.getJSON(app);
     if (user === null) {
       return {};
     }
-    return JSON.parse(user).id;
+    return user.id;
   },
 
   tokenHeader() {

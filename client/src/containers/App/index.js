@@ -7,6 +7,9 @@ class App extends Component {
   render() {
     return (
       <Container className="App" fluid>
+        <div className="d-none d-sm-block mobile-only-banner">
+          Currently WODiki Only Supports Mobile Browsing
+        </div>
         {React.cloneElement(this.props.children, this.props)}
       </Container>
     );
