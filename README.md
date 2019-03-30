@@ -1,1 +1,3 @@
 # WODiki
+
+### Build Status https://codebuild.us-west-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiN1gvYVJ2YmhVYXRiczhjNXNmWkVteEYyUTlWUWNFbk50UFRVVlc0bnBxcHlxQ2YrVTdtU1lCZWFBcG51SHYzc1UvcUNyUkJPaVo0SFl5U1A1Sk1aY01FPSIsIml2UGFyYW1ldGVyU3BlYyI6IlI0V0tlMkl4UlNFZjVHeFoiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master
